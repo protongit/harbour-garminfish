@@ -54,7 +54,7 @@ Build and install this fork from source with the Sailfish SDK; see
 [FORK.md](FORK.md) for the commands.
 
 For the upstream app and its downloads, see
-[piggz/harbour-garminfish](https://github.com/piggz/harbour-amazfish).
+[piggz/harbour-amazfish](https://github.com/piggz/harbour-amazfish).
 
 ## License and attribution
 

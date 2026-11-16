@@ -1,8 +1,9 @@
 > [!IMPORTANT]
 > ## This is a fork
 >
-> This repository is a **fork of [Amazfish](https://github.com/piggz/harbour-amazfish)**
-> by [piggz](https://github.com/piggz). It is **not** the official Amazfish
+> **GarminFish** (this repository) is a fork of
+> [Amazfish](https://github.com/piggz/harbour-amazfish) by
+> [piggz](https://github.com/piggz). It is **not** the official Amazfish
 > project and it is not maintained by the Amazfish authors.
 >
 > The fork focuses on **Garmin** support, tested on the **Garmin Instinct 2
@@ -19,15 +20,14 @@
 
 [![Translation status](https://hosted.weblate.org/widget/harbour-amazfish/svg-badge.svg)](https://hosted.weblate.org/engage/harbour-amazfish/)
 
-# Amazfish (Garmin fork)
+# GarminFish
 
 * [Upstream project](https://github.com/piggz/harbour-amazfish)
 * [Upstream documentation](https://amazfish.github.io/)
 * [Changes in this fork and build notes](FORK.md)
 
-Companion application for Huami Devices (such as Amazfit Bip, Cor, MiBand2/3 and
-GTS and GTS) and the Pinetime Infinitime, with added support for Garmin
-devices.
+GarminFish is a fork of Amazfish. It keeps the Huami/PineTime support and
+adds Garmin support, tested on the Garmin Instinct 2 Solar.
 
 ## Garmin support in this fork
 

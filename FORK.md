@@ -1,7 +1,8 @@
-# Fork notes
+# GarminFish — fork notes
 
-This repository is a **fork of [Amazfish](https://github.com/piggz/harbour-amazfish)**
-by [piggz](https://github.com/piggz). It is not the official Amazfish project
+GarminFish (this repository) is a **fork of
+[Amazfish](https://github.com/piggz/harbour-amazfish)** by
+[piggz](https://github.com/piggz). It is not the official Amazfish project
 and it is not maintained by the Amazfish authors.
 
 Upstream is the place to go for general Amazfish support, releases and issues:

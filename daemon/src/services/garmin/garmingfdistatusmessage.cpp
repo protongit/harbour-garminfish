@@ -64,12 +64,18 @@ void GarminGfdiStatusMessage::parse(const QByteArray& data)
         */
     case MessageId::DownloadRequest:
         qDebug() << Q_FUNC_INFO << "Garmin: Detected " << messageIdToString(originalMessageType).value();
+        handled = true;
+        if (mCommunicator) {
+            mCommunicator->onDownloadRequestStatus(data);
+        }
         break;
     case MessageId::FileTransferData:
         qDebug() << Q_FUNC_INFO << "Garmin: Detected " << messageIdToString(originalMessageType).value();
+        handled = true;
         break;
     case MessageId::Filter:
         qDebug() << Q_FUNC_INFO << "Garmin: Detected " << messageIdToString(originalMessageType).value();
+        handled = true;
         break;
         /*
     case MessageId::FindMyPhoneCancel:

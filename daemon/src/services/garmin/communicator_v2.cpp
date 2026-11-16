@@ -342,19 +342,46 @@ void CommunicatorV2::onNotificationPerformAction(const NotificationControlMessag
     emit NotificationPerformAction(msg);
 }
 
+void CommunicatorV2::onMusicControl(quint8 command){
+    qDebug() << Q_FUNC_INFO << "Garmin: music command" << command;
+    // The device turns the command into a device event.
+    emit musicControlCommand(command);
+}
+
+void CommunicatorV2::onMusicControlCapabilities(){
+    qDebug() << Q_FUNC_INFO;
+    // The device re-sends its current track so the watch widget is in sync.
+    emit musicControlCapabilitiesRequested();
+}
+
 
 void CommunicatorV2::onSynchronizationReceived(const SynchronizationMessage& msg) {
     qDebug() << Q_FUNC_INFO;
 }
 
 void CommunicatorV2::onFilterStatusReceived(const FilterStatusMessage& msg) {
-    qDebug() << Q_FUNC_INFO;
+    qDebug() << Q_FUNC_INFO << "filter status" << int(msg.status);
+    if (msg.status == Status::Ack) {
+        emit filterStatusReceived();
+    }
+}
 
+void CommunicatorV2::onDownloadRequestStatus(const QByteArray& data) {
+    qDebug() << Q_FUNC_INFO;
+    emit downloadStatusReceived(data);
+}
+
+void CommunicatorV2::onFileTransferData(const QByteArray& data) {
+    qDebug() << Q_FUNC_INFO;
+    emit fileTransferDataReceived(data);
 }
 
 void CommunicatorV2::onWeatherRequestReceived(const WeatherRequestMessage& msg) {
-    qDebug() << Q_FUNC_INFO;
-
+    qDebug() << Q_FUNC_INFO << "format" << msg.format
+             << "lat" << msg.latitude
+             << "lon" << msg.longitude
+             << "hours" << msg.hoursOfForecast;
+    emit weatherRequested();
 }
 
 
@@ -461,7 +488,11 @@ void CommunicatorV2::handleNonMlrMessage(const QByteArray& data) {
 
 void CommunicatorV2::handleIncomingGfdiMessage(const QByteArray& data)
 {
-    if (data.size()<8) {
+    // The smallest valid GFDI message is just size + message id + CRC (6
+    // bytes). Music control uses a 7 byte message (one command byte) and the
+    // music capabilities query can even come with an empty payload, so the
+    // old 8 byte minimum silently dropped every music message.
+    if (data.size() < 6) {
         qDebug() << Q_FUNC_INFO << "Garmin: Incoming Gfdi Message is too small";
         return;
     }
@@ -753,15 +784,27 @@ void CommunicatorV2::registerHandle(Service service, quint8 handle) {
 bool CommunicatorV2::completePairing() {
     // To complete the initial pairing, some messages must be sent to the device
     qDebug()<< Q_FUNC_INFO << "Garmin: Checking for first connection";
+
+    // Tell the watch which files we can handle. This is also needed on
+    // reconnects so the watch advertises activity/sleep files to us.
+    sendMessage("SUPPORTED FILE TYPES",
+                GfdiMessageGenerator::supportedFileTypesRequest());
+    // Ask immediately; some firmware versions ignore the first request after
+    // a reconnect, and the periodic timer would otherwise leave the battery
+    // unknown for two minutes.
+    getBatteryLevel();
+
+    // Keep auto-upload disabled on every connection, not only during pairing.
+    // Otherwise the watch may register upload tokens after a later reconnect
+    // and archive new activities before Amazfish can list them.
+    if (!sendMessage("DEVICE_SETTINGS", GfdiMessageGenerator::deviceSettings())) {
+        return false;
+    }
+
     if (isFirstConnect || (qobject_cast<GarminDevice *>(m_device))->isPairing()) {
         qDebug()<< Q_FUNC_INFO << "Garmin: Doing first connection";
 
         QByteArray msg;
-        //msg = GfdiMessageGenerator::supportedFileTypesRequest();
-        //if (!sendMessage("SUPPORTED FILE TYPE REQUEST",msg)) return false;
-
-        msg = GfdiMessageGenerator::deviceSettings();
-        if (!sendMessage("DEVICE_SETTINGS",msg)) return false;
 
         // Time Synchronization should come now
         msg = GfdiMessageGenerator::systemEvent(16,0);

@@ -27,6 +27,7 @@ QHash<int, QByteArray> SportsDataModel::roleNames() const
     names[SportBaseLongitude] = "baselongitude";
     names[SportBaseLatitude] = "baselatitude";
     names[SportBaseAltitude] = "basealtitude";
+    names[SportLoad] = "load";
 
     return names;
 }
@@ -62,6 +63,8 @@ QVariant SportsDataModel::data(const QModelIndex &index, int role) const
         return item.baseLatitude;
     case SportBaseAltitude:
         return item.baseAltitude;
+    case SportLoad:
+        return item.load;
     }
     return QVariant();
 }
@@ -90,7 +93,10 @@ void SportsDataModel::setKind(uint id, const QString &kind) {
 void SportsDataModel::update()
 {
     beginResetModel();
-    QString qry = "SELECT id, name, version, start_timestamp_dt, end_timestamp_dt, kind, base_longitude, base_latitude, base_altitude, gpx FROM sports_data ORDER BY start_timestamp_dt DESC";
+    QString qry = "SELECT sd.id, sd.name, sd.version, sd.start_timestamp_dt, sd.end_timestamp_dt, sd.kind, sd.base_longitude, sd.base_latitude, sd.base_altitude, sd.gpx, sm.value "
+                  "FROM sports_data sd "
+                  "LEFT JOIN sports_meta sm ON sm.sport_id = sd.id AND sm.key = 'currentWorkoutLoad' "
+                  "ORDER BY sd.start_timestamp_dt DESC";
     m_data.clear();
 
     if (m_connection && m_connection->isDatabaseUsed()) {
@@ -109,6 +115,7 @@ void SportsDataModel::update()
                     data.baseLongitude = curs->value(6).toDouble();
                     data.baseLatitude = curs->value(7).toDouble();
                     data.baseAltitude = curs->value(8).toDouble();
+                    data.load = curs->value(10).toDouble();
                     //qDebug() << data.name << curs->value(8) << curs->value(8).toString() << curs->value(8).toString().toInt();
                     m_data << data;
                     curs->moveNext();

@@ -146,9 +146,13 @@ public:
     void onConfigurationReceived();
     void onNotificationDataRequested(const NotificationControlMessage& msg);
     void onNotificationPerformAction(const NotificationControlMessage& msg);
+    void onMusicControl(quint8 command);
+    void onMusicControlCapabilities();
     void onSynchronizationReceived(const SynchronizationMessage& msg);
     void onFilterStatusReceived(const FilterStatusMessage& msg);
     void onWeatherRequestReceived(const WeatherRequestMessage& msg);
+    void onDownloadRequestStatus(const QByteArray& data);
+    void onFileTransferData(const QByteArray& data);
     void onProtobufMessageReceived(const QByteArray& data);
     void onProtobufStatusMessageReceived(const QByteArray& data);
 
@@ -175,6 +179,13 @@ signals:
     void informationChanged(Amazfish::Info infoKey, const QString& infoValue);
     void NotificationDataRequested(const NotificationControlMessage& msg);
     void NotificationPerformAction(const NotificationControlMessage& msg);
+    void musicControlCommand(quint8 command);
+    void musicControlCapabilitiesRequested();
+
+    void downloadStatusReceived(const QByteArray& data);
+    void fileTransferDataReceived(const QByteArray& data);
+    void filterStatusReceived();
+    void weatherRequested();
 
     void gfdiMessageReceived(const QByteArray& gfdiMessage);
 

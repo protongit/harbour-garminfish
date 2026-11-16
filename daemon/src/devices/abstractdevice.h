@@ -67,6 +67,7 @@ public:
     virtual void startDownload();
 
     virtual void fetchData(Amazfish::DataTypes dataTypes);
+    virtual void fetchFullData(Amazfish::DataTypes dataTypes);
     virtual void sendWeather(CurrentWeather *weather);
     virtual void refreshInformation();
     virtual QString information(Amazfish::Info i) const;
@@ -78,6 +79,8 @@ public:
     virtual void syncCalendar(QList<watchfish::CalendarEvent> &eventlist);
     virtual void enableFeature(Amazfish::Feature feature);
     virtual void setMusicStatus(bool playing, const QString &title, const QString &artist, const QString &album, int duration = 0, int position = 0);
+    virtual void setMusicPosition(int positionSeconds);
+    virtual void setMusicVolume(int volume);
     virtual void navigationRunning(bool running);
     virtual void navigationNarrative(const QString &flag, const QString &narrative, const QString &manDist, int progress);
     virtual void requestScreenshot();
@@ -98,6 +101,7 @@ public:
     Q_SIGNAL void connectionStateChanged();
     Q_SIGNAL void informationChanged(Amazfish::Info key, const QString& val);
     Q_SIGNAL void deviceEvent(Event event);
+    Q_SIGNAL void weatherRequested();
 
 protected:
     bool m_pairing = false;

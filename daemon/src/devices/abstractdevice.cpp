@@ -147,6 +147,12 @@ void AbstractDevice::fetchData(Amazfish::DataTypes dataTypes)
     Q_UNUSED(dataTypes);
 }
 
+void AbstractDevice::fetchFullData(Amazfish::DataTypes dataTypes)
+{
+    // Devices without a distinct full-history operation keep the old behaviour.
+    fetchData(dataTypes);
+}
+
 void AbstractDevice::sendWeather(CurrentWeather *weather)
 {
     Q_UNUSED(weather);
@@ -190,6 +196,18 @@ void AbstractDevice::setMusicStatus(bool playing, const QString &title, const QS
     Q_UNUSED(title);
     Q_UNUSED(artist);
     Q_UNUSED(album);
+    Q_UNUSED(duration);
+    Q_UNUSED(position);
+}
+
+void AbstractDevice::setMusicPosition(int positionSeconds)
+{
+    Q_UNUSED(positionSeconds);
+}
+
+void AbstractDevice::setMusicVolume(int volume)
+{
+    Q_UNUSED(volume);
 }
 
 void AbstractDevice::abortOperations()

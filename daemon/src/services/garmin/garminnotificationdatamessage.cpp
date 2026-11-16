@@ -104,10 +104,13 @@ QByteArray encodeNotificationActionsString(NotificationSpec notificationSpec) {
     QByteArray outputStream;
     if (notificationSpec.notificationType == NotificationType::GenericPhone) {
         qDebug() << Q_FUNC_INFO << "Garmin: Building Notification Actions for Phone Call";
-         outputStream.append(char(2)); // Two actions: ommit Reply as it cannot be handled
-         //outputStream.append(encodeNotificationAction(NotificationAction::REPLY_INCOMING_CALL, " ")); //text is not shown on watch
-         outputStream.append(encodeNotificationAction(NotificationAction::REJECT_INCOMING_CALL, " ")); //text is not shown on watch
-         outputStream.append(encodeNotificationAction(NotificationAction::ACCEPT_INCOMING_CALL, " ")); //text is not shown on watch
+         // The watch expects the same three actions Gadgetbridge sends for a
+         // call: reply, reject and accept. The text is not shown on the watch,
+         // only the icon position tells it which button to use.
+         outputStream.append(char(3));
+         outputStream.append(encodeNotificationAction(NotificationAction::REPLY_INCOMING_CALL, " "));
+         outputStream.append(encodeNotificationAction(NotificationAction::REJECT_INCOMING_CALL, " "));
+         outputStream.append(encodeNotificationAction(NotificationAction::ACCEPT_INCOMING_CALL, " "));
          return outputStream;
      }
 

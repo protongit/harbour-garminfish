@@ -9,6 +9,7 @@ PagePL {
     title: qsTr("Blood Oxygen")
 
     property alias day: nav.day
+    property var latest: ({})
 
     pageMenu: PageMenuPL {
         PageMenuItemPL {
@@ -30,7 +31,18 @@ PagePL {
             font.pixelSize: styler.themeFontSizeExtraLarge * 3
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
-            text: supportsData(Amazfish.TYPE_SPO2) ? qsTr("%1%").arg(_InfoSpo2) : graphSpo2Normal.lastValue + "%"
+            text: _InfoSpo2 > 0
+                  ? qsTr("%1%").arg(_InfoSpo2)
+                  : (latest.value !== undefined ? qsTr("%1%").arg(latest.value) : qsTr("No SpO2 data"))
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        LabelPL {
+            width: parent.width
+            visible: latest.time !== undefined
+            color: styler.themeSecondaryHighlightColor
+            font.pixelSize: styler.themeFontSizeSmall
+            text: qsTr("Last synced: %1").arg(latest.time || "-")
             horizontalAlignment: Text.AlignHCenter
         }
         DateNavigation {
@@ -75,6 +87,7 @@ PagePL {
             id: graphSpo2Sleep
             graphTitle: qsTr("Sleep SPO2")
             graphHeight: 300
+            visible: !noData
 
             axisX.mask: "MM/dd"
             axisY.units: qsTr("%")
@@ -91,9 +104,19 @@ PagePL {
                 updateGraph(day);
             }
         }
+
+        LabelPL {
+            width: parent.width
+            visible: graphSpo2Sleep.noData
+            wrapMode: Text.Wrap
+            color: styler.themeSecondaryHighlightColor
+            text: qsTr("No sleep SpO2 data from this watch")
+            horizontalAlignment: Text.AlignHCenter
+        }
     }
 
     function updateGraphs() {
+        latest = dataSource.latestSpo2();
         graphSpo2Normal.updateGraph(day);
         graphSpo2Sleep.updateGraph(day);
     }

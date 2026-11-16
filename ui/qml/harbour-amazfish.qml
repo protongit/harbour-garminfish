@@ -237,6 +237,27 @@ ApplicationWindowPL
         if (!_authenticated) {
             return
         }
+        var steps = parseInt(DaemonInterfaceInstance.information(Amazfish.INFO_STEPS), 10);
+        if (!isNaN(steps)) {
+            _InfoSteps = steps;
+        }
+        var heartRate = parseInt(DaemonInterfaceInstance.information(Amazfish.INFO_HEARTRATE), 10);
+        if (!isNaN(heartRate)) {
+            _InfoHeartrate = heartRate;
+        }
+        var spo2 = parseInt(DaemonInterfaceInstance.information(Amazfish.INFO_SPO2), 10);
+        if (!isNaN(spo2) && spo2 > 0) {
+            _InfoSpo2 = spo2;
+        } else {
+            var latestSpo2 = dataSource.latestSpo2();
+            if (latestSpo2.value !== undefined) {
+                _InfoSpo2 = latestSpo2.value;
+            }
+        }
+        var battery = parseInt(DaemonInterfaceInstance.information(Amazfish.INFO_BATTERY), 10);
+        if (!isNaN(battery)) {
+            _InfoBatteryPercent = battery;
+        }
         DaemonInterfaceInstance.refreshInformation();
     }
 

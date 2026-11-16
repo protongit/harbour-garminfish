@@ -7,12 +7,13 @@ PagePL {
     id: page
     title: qsTr("Analysis")
     property alias day: nav.day
+    property var hrvSummary: ({})
 
     pageMenu: PageMenuPL {
         PageMenuItemPL {
             iconSource: styler.iconDownloadData !== undefined ? styler.iconDownloadData : ""
             text: qsTr("Download All Data")
-            onClicked: DaemonInterfaceInstance.fetchData(Amazfish.TYPE_HRV | Amazfish.TYPE_TEMPERATURE | Amazfish.TYPE_ACTIVITY);
+            onClicked: DaemonInterfaceInstance.fetchFullData(Amazfish.TYPE_HRV | Amazfish.TYPE_TEMPERATURE | Amazfish.TYPE_ACTIVITY);
         }
     }
 
@@ -61,16 +62,28 @@ PagePL {
                 updateGraph(day);
             }
         }
+        LabelPL {
+            text: qsTr("Latest steps: %1").arg(isToday()
+                                              ? _InfoSteps.toLocaleString()
+                                              : graphSteps.lastValue.toLocaleString())
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+        }
+
         Graph {
             id: graphSteps
             graphTitle: qsTr("Steps")
             graphHeight: 300
 
+            axisX.mask: "MM/dd"
             axisY.units: qsTr("Steps")
-            type: DataSource.Steps
+            type: DataSource.StepSummary
+            graphType: bar
 
             minY: 0
-            maxY: 200
+            maxY: (2 * AmazfishConfig.profileFitnessGoal > suggestedMaxY)
+                  ? 2 * AmazfishConfig.profileFitnessGoal
+                  : Math.ceil(suggestedMaxY/1000)*1000
             valueConverter: function(value) {
                 return value.toFixed(0);
             }
@@ -95,9 +108,17 @@ PagePL {
                 updateGraph(day);
             }
         }
+        LabelPL {
+            id: lblHrvSummary
+            width: parent.width
+            wrapMode: Text.Wrap
+            color: styler.themeSecondaryHighlightColor
+            text: qsTr("No HRV summary yet")
+        }
+
         Graph {
             id: graphHRV
-            graphTitle: qsTr("HRV")
+            graphTitle: qsTr("HRV / VFC")
             graphHeight: 300
 
             axisY.units: ""
@@ -136,15 +157,41 @@ PagePL {
 
     }
 
+    function isToday() {
+        var now = new Date();
+        return day.getFullYear() === now.getFullYear()
+                && day.getMonth() === now.getMonth()
+                && day.getDate() === now.getDate();
+    }
+
+    function updateHrvSummary() {
+        hrvSummary = dataSource.latestHrvSummary();
+        if (hrvSummary === undefined || hrvSummary.lastNightAverage === undefined) {
+            lblHrvSummary.text = qsTr("No HRV summary yet");
+            return;
+        }
+        lblHrvSummary.text = qsTr("Last night: %1 ms · 7-day avg: %2 ms · Status: %3")
+                .arg(Math.round(hrvSummary.lastNightAverage))
+                .arg(Math.round(hrvSummary.weeklyAverage))
+                .arg(hrvSummary.status);
+        if (hrvSummary.baselineBalancedLow !== undefined) {
+            lblHrvSummary.text += qsTr(" · Baseline: %1-%2 ms")
+                    .arg(Math.round(hrvSummary.baselineBalancedLow))
+                    .arg(Math.round(hrvSummary.baselineBalancedHigh));
+        }
+    }
+
     function updateGraphs() {
         graphHeartrate.updateGraph(day);
         graphSteps.updateGraph(day);
         graphIntensity.updateGraph(day);
         graphHRV.updateGraph(day);
         graphBodyTemperature.updateGraph(day);
+        updateHrvSummary();
     }
 
     Component.onCompleted: {
         day = new Date();
+        updateGraphs();
     }
 }

@@ -71,7 +71,14 @@ int main(int argc, char **argv)
 
     }
 
-    daemonize();
+    // When started by systemd, stay in the foreground so systemd tracks the
+    // real daemon process. The historical double-fork left orphan processes
+    // holding the D-Bus name on every service restart.
+    const bool underSystemd = !qgetenv("INVOCATION_ID").isEmpty()
+            || !qgetenv("NOTIFY_SOCKET").isEmpty();
+    if (!underSystemd) {
+        daemonize();
+    }
 
     setlinebuf(stdout);
     setlinebuf(stderr);

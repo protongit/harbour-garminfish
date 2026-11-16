@@ -129,6 +129,14 @@ void DaemonInterface::unpair()
     iface->call(QStringLiteral("unpair"));
 }
 
+void DaemonInterface::unpairDevice(const QString &address)
+{
+    if (!iface || !iface->isValid() || address.isEmpty()) {
+        return;
+    }
+    iface->call(QStringLiteral("unpairDevice"), address);
+}
+
 
 bool DaemonInterface::supportsFeature(Amazfish::Feature f)
 {

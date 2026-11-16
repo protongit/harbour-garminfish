@@ -11,6 +11,7 @@
 #include "garminweathermessage.h"
 #include "garminfilterstatusmessage.h"
 #include "garmingfdistatusmessage.h"
+#include "garminmusiccontrolmessage.h"
 #include "garminprotobufmessage.h"
 #include "garminauthnegotiationmessage.h"
 
@@ -125,14 +126,17 @@ void GarminGfdiMessage::parse(const QByteArray& data) {
     case MessageId::NotificationSubscription:
         parseNotificationSubscription(data.mid(offset));
         return;
-        /*
     case MessageId::Synchronization:
         parseSynchronization(data.mid(offset));
+        return;
+    case MessageId::FileTransferData:
+        if (mCommunicator) {
+            mCommunicator->onFileTransferData(data.mid(offset));
+        }
         return;
     case MessageId::WeatherRequest:
         parseWeatherRequest(data.mid(offset));
         return;
-        */
 
     case  MessageId::ProtobufRequest:
         parseProtobufRequest(data.mid(offset));
@@ -143,6 +147,30 @@ void GarminGfdiMessage::parse(const QByteArray& data) {
     case MessageId::AuthNegotiation:
         parseAuthNegotiation(data.mid(offset));
         return;
+
+    case MessageId::MusicControl: {
+        // One byte command: play/pause, skip, volume...
+        if (data.size() > offset && mCommunicator) {
+            mCommunicator->onMusicControl(quint8(data.at(offset)));
+        }
+        // The command itself is acknowledged like any other GFDI message.
+        if (mCommunicator) {
+            mCommunicator->sendMessage("MUSIC CONTROL ACK",
+                    GfdiMessageGenerator::ackResponse(msgId));
+        }
+        return;
+    }
+
+    case MessageId::MusicControlCapabilities: {
+        // The watch announces what it can do and expects the list of commands
+        // the phone supports. The response already carries the Ack status.
+        if (mCommunicator) {
+            mCommunicator->sendMessage("MUSIC CAPABILITIES",
+                    GarminMusicControlMessage::capabilitiesResponse(msgId));
+            mCommunicator->onMusicControlCapabilities();
+        }
+        return;
+    }
 
     default:
         // Send simple Ack
@@ -292,14 +320,15 @@ QByteArray GfdiMessageGenerator::supportedFileTypesRequest()
 
 QByteArray GfdiMessageGenerator::deviceSettings()
 {
-    // Matches GarminSupport.sendDeviceSettings(): auto-upload + weather
-    // conditions enabled, weather alerts disabled. Each setting is
-    // [ordinal][valueLen][value...]; booleans are a single byte.
+    // Keep auto-upload disabled. If it is enabled, the watch registers upload
+    // tokens with Garmin Connect and marks saved activities as uploaded, so
+    // they disappear from the GFDI directory before Amazfish can download
+    // them. Weather conditions stay enabled; alerts are disabled.
     QByteArray payload;
     payload.append(char(3)); // setting count
     payload.append(char(quint8(GfdiDeviceSetting::AutoUploadEnabled)));
     payload.append(char(1));
-    payload.append(char(1));
+    payload.append(char(0)); // disabled
     payload.append(char(quint8(GfdiDeviceSetting::WeatherConditionsEnabled)));
     payload.append(char(1));
     payload.append(char(1));

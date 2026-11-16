@@ -59,6 +59,7 @@ set(SOURCES
 ./src/devices/garmin/garmindevice.cpp
 ./src/devices/garmin/epixpro.cpp
 ./src/devices/garmin/vivosmart5.cpp
+./src/devices/garmin/instinct2solar.cpp
 ./src/devices/pinetimejfdevice.cpp
 ./src/devices/infinitimefirmwareinfo.cpp
 ./src/devices/dk08device.cpp
@@ -133,6 +134,7 @@ set(SOURCES
 ./src/services/garmin/garminauthnegotiationmessage.cpp
 ./src/services/garmin/garmincalendarmessage.cpp
 ./src/services/garmin/garmingfdistatusmessage.cpp
+./src/services/garmin/garminmusiccontrolmessage.cpp
 ./src/services/garmin/garminprotobufmessage.cpp
 ./src/services/garmin/protobufhandler.cpp
 ./src/services/garmin/garminspo2message.cpp
@@ -141,6 +143,8 @@ set(SOURCES
 ./src/services/garmin/garminstepsmessage.cpp
 ./src/services/garmin/garminmlr.cpp
 ./src/services/garmin/datatransferhandler.cpp
+./src/services/garmin/garminfiletransfer.cpp
+./src/services/garmin/garminfitparser.cpp
 ./src/services/pinetimemusicservice.cpp
 ./src/services/pinetimesimpleweatherservice.cpp
 ./src/services/uartservice.cpp
@@ -287,6 +291,7 @@ set(HEADERS
 ./src/services/garmin/garminauthnegotiationmessage.h
 ./src/services/garmin/garmincalendarmessage.h
 ./src/services/garmin/garmingfdistatusmessage.h
+./src/services/garmin/garminmusiccontrolmessage.h
 ./src/services/garmin/garminprotobufmessage.h
 ./src/services/garmin/protobufhandler.h
 ./src/services/garmin/garminspo2message.h

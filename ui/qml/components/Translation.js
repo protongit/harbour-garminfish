@@ -366,6 +366,10 @@ function translateSportKey(key) {
         "totalClimbing": qsTr("Total Climbing"),
         "totalDuration": qsTr("Total Duration"),
         "totalStride": qsTr("Total Stride"),
+        "trainingStressScore": qsTr("Training Stress Score"),
+        "avgStress": qsTr("Average Stress"),
+        "hrvSdrr": qsTr("HRV SDRR"),
+        "hrvRmssd": qsTr("HRV RMSSD"),
         "uphillTime": qsTr("Uphill Time"),
         "workoutDuration": qsTr("Workout Duration")
     };
@@ -388,6 +392,7 @@ function translateSportUnit(unit) {
         "meters_second": qsTr("m/s"),
         "min_km": qsTr("min/km"),
         "ml_kg_min": qsTr("ml/kg/min"),
+        "ms": qsTr("ms"),
         "seconds": qsTr("s"),
         "seconds_km": qsTr("s/km"),
         "seconds_m": qsTr("s/m"),

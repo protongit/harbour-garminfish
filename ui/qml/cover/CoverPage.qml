@@ -157,6 +157,7 @@ CoverBackground {
         onConnectionStateChanged: {
             if (DaemonInterfaceInstance.connectionState === "authenticated") {
                 DaemonInterfaceInstance.refreshInformation();
+                refreshDeviceInfo();
             }
         }
         onInformationChanged: {
@@ -178,8 +179,31 @@ CoverBackground {
     }
 
     Component.onCompleted: {
+        refreshDeviceInfo();
         if (DaemonInterfaceInstance.connectionState === "authenticated") {
             DaemonInterfaceInstance.refreshInformation();
+        }
+    }
+
+    function refreshDeviceInfo() {
+        stepCount = parseInt(DaemonInterfaceInstance.information(Amazfish.INFO_STEPS), 10) || 0;
+        var heartRate = DaemonInterfaceInstance.information(Amazfish.INFO_HEARTRATE);
+        if (heartRate !== undefined && heartRate !== "") {
+            lblHeartrate.text = heartRate;
+        }
+        var spo2 = DaemonInterfaceInstance.information(Amazfish.INFO_SPO2);
+        if (spo2 === undefined || spo2 === "") {
+            var latest = dataSource.latestSpo2();
+            if (latest.value !== undefined) {
+                spo2 = latest.value;
+            }
+        }
+        if (spo2 !== undefined && spo2 !== "") {
+            lblSpo2.text = spo2;
+        }
+        var battery = DaemonInterfaceInstance.information(Amazfish.INFO_BATTERY);
+        if (battery !== undefined && battery !== "") {
+            lblBattery.text = battery;
         }
     }
 }

@@ -245,6 +245,22 @@ PagePL {
             }
         }
 
+        Tile {
+            text: qsTr("Training")
+            visible: supportsFeatureRefresh(Amazfish.FEATURE_ACTIVITY)
+
+            contentItem: IconPL {
+                iconName: styler.iconLevels
+                anchors.centerIn: parent
+                width: styler.themeIconSizeLarge
+                height: width
+            }
+
+            onClicked: {
+                app.pages.push(Qt.resolvedUrl("TrainingPage.qml"))
+            }
+        }
+
         PAITile {
             id: paiTile
             visible: supportsDataRefresh(Amazfish.TYPE_PAI)
@@ -327,6 +343,10 @@ PagePL {
                 }
             }
 
+            Component.onCompleted: {
+                _InfoBatteryPercent = parseInt(DaemonInterfaceInstance.information(Amazfish.INFO_BATTERY), 10) || 0;
+            }
+
             onClicked: {
                 app.pages.push(Qt.resolvedUrl("BatteryPage.qml"))
             }
@@ -365,13 +385,24 @@ PagePL {
     onPageStatusActive: {
         tmrStartup.start();
         updatePAI();
+        updateSpo2Fallback();
     }
 
     Component.onCompleted: {
         if (AmazfishConfig.profileName) {
             _refreshInformation();
         }
+        updateSpo2Fallback();
         start();
+    }
+
+    function updateSpo2Fallback() {
+        if ((_InfoSpo2 || 0) <= 0) {
+            var latest = dataSource.latestSpo2();
+            if (latest.value !== undefined) {
+                _InfoSpo2 = latest.value;
+            }
+        }
     }
 
     function start() {

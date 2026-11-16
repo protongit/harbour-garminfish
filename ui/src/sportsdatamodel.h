@@ -17,6 +17,7 @@ typedef struct {
     double baseLongitude;
     double baseLatitude;
     int baseAltitude;
+    double load;
 } SportsData;
 
 class SportsDataModel : public QAbstractListModel
@@ -36,7 +37,8 @@ public:
         SportKindString,
         SportBaseLongitude,
         SportBaseLatitude,
-        SportBaseAltitude
+        SportBaseAltitude,
+        SportLoad
     };
 
 

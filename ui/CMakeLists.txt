@@ -32,6 +32,7 @@ set(SOURCES
     ./src/harbour-amazfish-ui.cpp
     ./src/trackloader.cpp
     ./src/daemoninterface.cpp
+    ./src/fitfileinspector.cpp
 )
 
 set(HEADERS
@@ -42,6 +43,7 @@ set(HEADERS
     ./src/timeformatter.h
     ./src/trackloader.h
     ./src/daemoninterface.h
+    ./src/fitfileinspector.h
 )
 
 add_executable(harbour-amazfish-ui

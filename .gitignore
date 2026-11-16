@@ -3,3 +3,27 @@ harbour-amazfish.pro.user*
 3rdparty/
 build/
 CMakeLists.txt.*
+
+# In-source build outputs
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+QtCreatorDeployment.txt
+Makefile
+RPMS/
+*.o
+*.a
+*.so
+*_autogen/
+*.qm
+daemon/harbour-amazfishd
+ui/harbour-amazfish-ui
+daemon/harbour-amazfish.service
+
+# Generated D-Bus interfaces inside the vendored libwatchfish
+daemon/libwatchfish/*_interface.*
+daemon/libwatchfish/*.moc*
+
+# Local research material and personal data (never versioned)
+docs/

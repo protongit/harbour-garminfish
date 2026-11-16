@@ -13,6 +13,7 @@
         <file>qml/pages/FitPubUploadPage.qml</file>
         <file>qml/pages/FitTrackeeSettingsPage.qml</file>
         <file>qml/pages/FitTrackeeUploadPage.qml</file>
+        <file>qml/pages/FitFilePage.qml</file>
         <file>qml/pages/HeartratePage.qml</file>
         <file>qml/pages/PaiDataPage.qml</file>
         <file>qml/pages/PairDevicePage.qml</file>
@@ -28,6 +29,7 @@
         <file>qml/pages/SleepPage.qml</file>
         <file>qml/pages/Spo2DataPage.qml</file>
         <file>qml/pages/SportPage.qml</file>
+        <file>qml/pages/SportChartsPage.qml</file>
         <file>qml/pages/SportsActivityKindPage.qml</file>
         <file>qml/pages/SportsSummaryPage.qml</file>
         <file>qml/pages/StepsPage.qml</file>
@@ -35,7 +37,9 @@
         <file>qml/pages/StravaUploadPage.qml</file>
         <file>qml/pages/StressDataPage.qml</file>
         <file>qml/pages/TestIconsPage.qml</file>
+        <file>qml/pages/TrainingPage.qml</file>
         <file>qml/pages/UnpairDeviceDialog.qml</file>
+        <file>qml/pages/WatchDataPage.qml</file>
         <file>qml/tools/JSTools.js</file>
     </qresource>
 </RCC>

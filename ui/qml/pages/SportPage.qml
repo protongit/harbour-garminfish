@@ -357,6 +357,18 @@ PagePL {
 
     pageMenu: PageMenuPL {
         PageMenuItemPL {
+            iconSource: styler.iconLevels !== undefined ? styler.iconLevels : ""
+            text: qsTr("Charts")
+            onClicked: {
+                app.pages.push(Qt.resolvedUrl("SportChartsPage.qml"), {
+                    "activityId": activityId,
+                    "kindstring": kindstring,
+                    "activitytitle": activitytitle,
+                    "tcx": tcx
+                });
+            }
+        }
+        PageMenuItemPL {
             iconSource: styler.iconUploadToStrava !== undefined ? styler.iconUploadToStrava : ""
             text: qsTr("Send to Strava")
             visible: o2strava.linked

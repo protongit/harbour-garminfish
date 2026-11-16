@@ -137,6 +137,9 @@ void GarminNotificationHandler::onNotificationPerformAction(const NotificationCo
                 emit rejectIncomingCall();
                 return;
             case (quint8)NotificationAction::REPLY_INCOMING_CALL:
+                // There is no canned-message reply for calls in Amazfish, so
+                // treat it like Gadgetbridge: reject the call.
+                emit rejectIncomingCall();
                 return;
             default:
                 // Unknonw action, ignoring

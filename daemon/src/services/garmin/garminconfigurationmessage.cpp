@@ -1,5 +1,6 @@
 #include "garminconfigurationmessage.h"
 #include "garmintypes.h"
+#include "garminmusiccontrolmessage.h"
 
 
 void GarminConfigurationMessage::parse(const QByteArray& data) {
@@ -14,6 +15,23 @@ void GarminConfigurationMessage::parse(const QByteArray& data) {
     if (mCommunicator) {
         mCommunicator->sendMessage("CONFIGURATION RESPOSE",resp);
         mCommunicator->completePairing();
+
+        // The watch tells us here what it supports. Some models only request
+        // the music control commands on a fresh pairing, so announce them on
+        // every connection; otherwise the music widget stays waiting.
+        if (!data.isEmpty()) {
+            const int length = qMin(int(quint8(data.at(0))), data.size() - 1);
+            const QSet<quint16> watchCapabilities = parseCapabilities(data.mid(1, length));
+            constexpr quint16 CAP_ADVANCED_MUSIC_CONTROLS = 7;
+            constexpr quint16 CAP_BASIC_MUSIC_CONTROLS = 52;
+            if (watchCapabilities.contains(CAP_ADVANCED_MUSIC_CONTROLS)
+                    || watchCapabilities.contains(CAP_BASIC_MUSIC_CONTROLS)) {
+                mCommunicator->sendMessage("MUSIC CAPABILITIES",
+                        GarminMusicControlMessage::capabilitiesResponse(
+                                quint16(MessageId::MusicControlCapabilities)));
+                mCommunicator->onMusicControlCapabilities();
+            }
+        }
     }
 }
 

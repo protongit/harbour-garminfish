@@ -32,6 +32,7 @@ public:
     Q_INVOKABLE void connectToDevice();
     Q_INVOKABLE void disconnect();
     Q_INVOKABLE void unpair();
+    Q_INVOKABLE void unpairDevice(const QString &address);
     Q_INVOKABLE bool supportsFeature(Amazfish::Feature f);
     Q_INVOKABLE bool supportsDataType(Amazfish::DataType t);
     Q_INVOKABLE int supportedFeatures();

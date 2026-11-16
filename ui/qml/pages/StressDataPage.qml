@@ -223,13 +223,20 @@ PagePL {
 
     function updateManual() {
         var dataPoints = dataSource.data(DataSource.StressManual, day);
-        lblManualStressValue.text = new Date(dataPoints[0].x) + " : " + dataPoints[0].y
+        if (!dataPoints || dataPoints.length === 0) {
+            lblManualStressValue.text = qsTr("No manual reading");
+            return;
+        }
+        var point = dataPoints[0];
+        lblManualStressValue.text = Qt.formatDateTime(new Date(point.x * 1000), "yyyy-MM-dd hh:mm")
+                + " : " + point.y;
     }
 
     function updateGraphs() {
         graphStressAuto.updateGraph(day);
         graphStressSummary.updateGraph(day);
         calculateZones();
+        updateManual();
     }
 
     Component.onCompleted: {

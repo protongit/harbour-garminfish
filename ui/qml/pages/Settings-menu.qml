@@ -70,6 +70,7 @@ PageListPL {
             append({"icon": styler.iconStrava, "name": qsTr("Strava"), "url": "StravaSettingsPage.qml"});
             append({"icon": styler.iconStrava, "name": qsTr("FitTrackee"), "url": "FitTrackeeSettingsPage.qml"});
             append({"icon": styler.iconStrava, "name": qsTr("FitPub"), "url": "FitPubSettingsPage.qml"});
+            append({"icon": styler.iconWatch, "name": qsTr("Watch Data"), "url": "WatchDataPage.qml"});
             append({"icon": styler.iconDiagnostic, "name": qsTr("Debug Info"), "url": "DebugInfo.qml"});
             append({"icon": styler.iconFavoriteSelected, "name": qsTr("Donate"), "url": "https://paypal.me/piggz"});
             completed = true;

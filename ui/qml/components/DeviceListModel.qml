@@ -153,4 +153,10 @@ ListModel {
         auth: false
         pattern: "v.vosmart 5"
     }
+    ListElement {
+        deviceType: "Garmin Instinct 2 Solar"
+        icon: "../pics/devices/garminepixpro.png"
+        auth: false
+        pattern: "Instinct 2 Solar"
+    }
 }

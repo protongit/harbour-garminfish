@@ -9,6 +9,8 @@
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QStandardPaths>
+#include <QDBusInterface>
 
 #include <KDb3/KDbDriverManager>
 #include <KDb3/KDbTransactionGuard>
@@ -44,6 +46,7 @@ DeviceInterface::DeviceInterface()
         connect(m_device, &AbstractDevice::buttonPressed, this, &DeviceInterface::handleButtonPressed, Qt::UniqueConnection);
         connect(m_device, &AbstractDevice::informationChanged, this, &DeviceInterface::slot_informationChanged, Qt::UniqueConnection);
         connect(m_device, &AbstractDevice::deviceEvent, this, &DeviceInterface::deviceEvent, Qt::UniqueConnection);
+        connect(m_device, &AbstractDevice::weatherRequested, this, &DeviceInterface::sendCurrentWeather, Qt::UniqueConnection);
     }
 
     //Create the DBUS HRM Interface
@@ -80,6 +83,15 @@ DeviceInterface::DeviceInterface()
     connect(&m_musicController, &watchfish::MusicController::titleChanged, this, &DeviceInterface::musicChanged);
     connect(&m_musicController, &watchfish::MusicController::artistChanged, this, &DeviceInterface::musicChanged);
     connect(&m_musicController, &watchfish::MusicController::albumChanged, this, &DeviceInterface::musicChanged);
+    connect(&m_musicController, &watchfish::MusicController::durationChanged, this, &DeviceInterface::musicChanged);
+    connect(&m_musicController, &watchfish::MusicController::volumeChanged, this, &DeviceInterface::musicVolumeChanged);
+
+    // Push the playback position while a track plays so the watch timeline and
+    // elapsed time keep moving.
+    m_musicPositionTimer = new QTimer(this);
+    m_musicPositionTimer->setInterval(1000);
+    connect(m_musicPositionTimer, &QTimer::timeout, this, &DeviceInterface::musicPositionTick);
+    m_musicPositionTimer->start();
 
     //Navigation
     connect(&m_navigationInterface, &NavigationInterface::runningChanged, this, &DeviceInterface::navigationRunningChanged);
@@ -186,6 +198,22 @@ QString DeviceInterface::pair(const QString &name, const QString &deviceType, co
         connect(m_device, &AbstractDevice::buttonPressed, this, &DeviceInterface::handleButtonPressed, Qt::UniqueConnection);
         connect(m_device, &AbstractDevice::informationChanged, this, &DeviceInterface::slot_informationChanged, Qt::UniqueConnection);
         connect(m_device, &AbstractDevice::deviceEvent, this, &DeviceInterface::deviceEvent, Qt::UniqueConnection);
+        connect(m_device, &AbstractDevice::weatherRequested, this, &DeviceInterface::sendCurrentWeather, Qt::UniqueConnection);
+
+        if (bluezDevicePaired(address)) {
+            // BlueZ still has the bond (for example when the app lost its own
+            // configuration). Pair() would fail with "Already exists", so save
+            // the pairing and connect directly.
+            qDebug() << Q_FUNC_INFO << "Device already paired in BlueZ, connecting";
+            auto config = AmazfishConfig::instance();
+            config->setPairedName(name);
+            config->setPairedType(deviceType);
+            config->setPairedAddress(address);
+            m_autoreconnect = true;
+            m_device->connectToDevice();
+            return "paired";
+        }
+
         m_device->pair();
         m_autoreconnect = true;
         return "pairing";
@@ -208,16 +236,43 @@ void DeviceInterface::disconnect()
 
 void DeviceInterface::unpair()
 {
-    qDebug() << Q_FUNC_INFO;
-    if (m_device && !m_adapterPath.isEmpty()) {
-        BluezAdapter adapter;
-        adapter.setAdapterPath(m_adapterPath);
-        adapter.removeDevice(m_deviceAddress);
+    unpairDevice(AmazfishConfig::instance()->pairedAddress());
+}
+
+void DeviceInterface::unpairDevice(const QString &address)
+{
+    qDebug() << Q_FUNC_INFO << address;
+
+    QString target = address;
+    if (target.isEmpty() && !m_deviceAddress.isEmpty()) {
+        // m_deviceAddress is the BlueZ object path: .../dev_AA_BB_...
+        target = m_deviceAddress.right(17).replace("_", ":");
+    }
+
+    if (!target.isEmpty()) {
+        const QString path = devicePath(target);
+        if (!path.isEmpty()) {
+            BluezAdapter adapter;
+            adapter.setAdapterPath(m_adapterPath);
+            // Best effort: some systems only let the root user (or the
+            // settings UI) actually remove the bond. The app configuration is
+            // cleared below regardless.
+            adapter.removeDevice(path);
+        }
+    }
+
+    if (m_device) {
         delete m_device;
         m_device = nullptr;
+    }
+    m_autoreconnect = false;
 
-        m_autoreconnect = false;
-        m_adapterPath = QString();
+    auto config = AmazfishConfig::instance();
+    if (target.isEmpty()
+            || config->pairedAddress().compare(target, Qt::CaseInsensitive) == 0) {
+        config->setPairedAddress(QString());
+        config->setPairedName(QString());
+        config->setPairedType(QString());
     }
 }
 
@@ -744,6 +799,10 @@ void DeviceInterface::onConnectionStateChanged()
 
             sendBufferedNotifications();
             updateCalendar();
+            // Give the watch the current music state as soon as it connects;
+            // the media signals only fire when something changes later.
+            musicChanged();
+            musicVolumeChanged();
             m_connectionStateChangedCount++;
         } else {
             //Terminate running operations
@@ -835,6 +894,22 @@ bool DeviceInterface::determineAdapterPath(const QString &address)
     return false;
 }
 
+bool DeviceInterface::bluezDevicePaired(const QString &address)
+{
+    const QString path = devicePath(address);
+    if (path.isEmpty()) {
+        return false;
+    }
+
+    QDBusInterface iface(QStringLiteral("org.bluez"), path,
+                         QStringLiteral("org.bluez.Device1"),
+                         QDBusConnection::systemBus());
+    if (!iface.isValid()) {
+        return false;
+    }
+    return iface.property("Paired").toBool();
+}
+
 void DeviceInterface::slot_informationChanged(Amazfish::Info key, const QString &val)
 {
     qDebug() << Q_FUNC_INFO << key << val;
@@ -872,15 +947,56 @@ void DeviceInterface::musicChanged()
 {
     qDebug() << Q_FUNC_INFO;
     if (m_device) {
+        // AmberMpris normalises length and position to milliseconds; the
+        // watch expects seconds.
+        const int duration = m_musicController.duration() / 1000;
+        const int position = int(m_musicController.position() / 1000);
         if (AmazfishConfig::instance()->appTransliterate()) {
                 m_device->setMusicStatus(m_musicController.status() == watchfish::MusicController::StatusPlaying,
                                          Transliterator::convert(m_musicController.title()),
                                          Transliterator::convert(m_musicController.artist()),
-                                         Transliterator::convert(m_musicController.album()));
+                                         Transliterator::convert(m_musicController.album()),
+                                         duration, position);
         } else {
             m_device->setMusicStatus(m_musicController.status() == watchfish::MusicController::StatusPlaying,
-                m_musicController.title(), m_musicController.artist(), m_musicController.album());
+                m_musicController.title(), m_musicController.artist(), m_musicController.album(),
+                duration, position);
         }
+    }
+}
+
+void DeviceInterface::musicPositionTick()
+{
+    if (!m_device || connectionState() != "authenticated") {
+        return;
+    }
+
+    const watchfish::MusicController::Status status = m_musicController.status();
+    if (status != watchfish::MusicController::StatusPlaying
+            && status != watchfish::MusicController::StatusPaused) {
+        return;
+    }
+
+    const qint64 position = m_musicController.position();
+    // Ask for a fresh value; it will be cached for the next tick.
+    m_musicController.requestPosition();
+    // AmberMpris reports milliseconds, the watch expects seconds.
+    m_device->setMusicPosition(int(position / 1000));
+}
+
+void DeviceInterface::musicVolumeChanged()
+{
+    qDebug() << Q_FUNC_INFO;
+    if (!m_device) {
+        return;
+    }
+
+    const int volume = m_musicController.volume();
+    const int volumeMax = m_musicController.volumeMax();
+    if (volume >= 0 && volumeMax > 0) {
+        // Devices expect a 0..100 percentage, but Sailfish reports a step
+        // between 0 and StepCount (12 on this phone).
+        m_device->setMusicVolume(qBound(0, volume * 100 / volumeMax, 100));
     }
 }
 
@@ -1161,15 +1277,28 @@ void DeviceInterface::sendWeather(CurrentWeather *weather)
     }
 }
 
+void DeviceInterface::sendCurrentWeather()
+{
+    if (m_weatherReady) {
+        sendWeather(&m_currentWeather);
+    } else if (!m_cityManager.cities().isEmpty()) {
+        // The watch asked for weather before the daemon had fresh data.
+        m_currentWeather.refresh();
+    }
+}
+
 void DeviceInterface::onCitiesChanged()
 {
     if (m_cityManager.cities().count() > 0) {
         m_currentWeather.setCity(qobject_cast<City*>(m_cityManager.cities().at(0)));
+        m_weatherReady = false;
+        m_currentWeather.refresh();
     }
 }
 
 void DeviceInterface::onWeatherReady()
 {
+    m_weatherReady = true;
     sendWeather(&m_currentWeather);
 }
 
@@ -1230,7 +1359,16 @@ void DeviceInterface::refreshInformation()
 QString DeviceInterface::information(int i)
 {
     if (m_device) {
-        return m_device->information((Amazfish::Info)i);
+        const QString value = m_device->information((Amazfish::Info)i);
+        // Some Garmin firmware versions do not answer the first battery
+        // request after a reconnect. Fall back to the last value stored in
+        // info_log so the main panel is not stuck at 0 %.
+        if (i == (int)Amazfish::Info::INFO_BATTERY
+                && (value.isEmpty() || value == QStringLiteral("0"))
+                && m_lastBatteryLevel > 0) {
+            return QString::number(m_lastBatteryLevel);
+        }
+        return value;
     }
     return QString();
 }
@@ -1315,6 +1453,7 @@ void DeviceInterface::onRefreshTimer()
     if (m_lastWeatherSync.secsTo(currentDate) >= (config->appRefreshWeather() * 60)) {
         // qDebug() << Q_FUNC_INFO << "weather interval reached";
         m_lastWeatherSync = currentDate;
+        m_weatherReady = false;
         m_currentWeather.refresh();
     }
 
@@ -1363,6 +1502,7 @@ void DeviceInterface::registerDBus()
 
 void DeviceInterface::triggerSendWeather()
 {
+    m_weatherReady = false;
     m_currentWeather.refresh();
 }
 
@@ -1413,6 +1553,8 @@ void DeviceInterface::reloadCities()
     m_cityManager.loadCities();
     if (m_cityManager.cities().count() > 0) {
         m_currentWeather.setCity(qobject_cast<City*>(m_cityManager.cities().at(0)));
+        m_weatherReady = false;
+        m_currentWeather.refresh();
     }
 }
 
@@ -1428,6 +1570,13 @@ void DeviceInterface::fetchData(int dataType)
 {
     if (m_device) {
         m_device->fetchData((Amazfish::DataTypes)dataType);
+    }
+}
+
+void DeviceInterface::fetchFullData(int dataType)
+{
+    if (m_device) {
+        m_device->fetchFullData((Amazfish::DataTypes)dataType);
     }
 }
 

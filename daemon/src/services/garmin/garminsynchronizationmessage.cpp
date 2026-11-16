@@ -34,7 +34,7 @@ void GarminSynchronizationMessage::parse(const QByteArray& data)
     const quint64 activity_summary = 1 <<21;
     const quint64 sleep = 1 <<26;
 
-    if ((bitmask & ( workout | activities | activity_summary | sleep))) {
+    if (syncType == 0 /* MANUAL */ || (bitmask & (workout | activities | activity_summary | sleep))) {
         //should proceed
         qDebug() << Q_FUNC_INFO << "Garmin: Synchronization should proceed";
         // Now should send filter message

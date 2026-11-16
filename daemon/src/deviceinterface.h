@@ -50,6 +50,7 @@ public:
     Q_INVOKABLE void connectToDevice(bool userInitiated);
     Q_INVOKABLE void disconnect();
     Q_INVOKABLE void unpair();
+    Q_INVOKABLE void unpairDevice(const QString &address);
     Q_INVOKABLE QString connectionState() const;
     Q_INVOKABLE int connectionStateChangedCount() const;
     Q_INVOKABLE bool operationRunning();
@@ -85,6 +86,7 @@ public:
     Q_INVOKABLE void reloadCities();
     Q_INVOKABLE void enableFeature(int feature);
     Q_INVOKABLE void fetchData(int dataType);
+    Q_INVOKABLE void fetchFullData(int dataType);
     Q_INVOKABLE void requestScreenshot();
     Q_INVOKABLE QStringList supportedDisplayItems();
     Q_INVOKABLE void immediateAlert(int level);
@@ -110,6 +112,7 @@ private:
     QTimer *m_refreshTimer = nullptr;
     QTimer *m_findDeviceTimer = nullptr;
     QTimer *m_reconnectTimer = nullptr;
+    QTimer *m_musicPositionTimer = nullptr;
     bool m_autoreconnect = true;
     bool m_allowDeviceNotAvailableMessage = true;
 
@@ -126,6 +129,7 @@ private:
 
     QString devicePath(const QString &address);
     bool determineAdapterPath(const QString &address);
+    bool bluezDevicePaired(const QString &address);
 
     HRMService *hrmService() const;
     
@@ -134,6 +138,8 @@ private:
     Q_SLOT void onConnectionStateChanged();
     Q_SLOT void slot_informationChanged(Amazfish::Info infokey, const QString &infovalue);
     Q_SLOT void musicChanged();
+    Q_SLOT void musicPositionTick();
+    Q_SLOT void musicVolumeChanged();
     Q_SLOT void deviceEvent(AbstractDevice::Event event);
     Q_SLOT void handleButtonPressed(int presses);
     Q_SLOT void onEventTimer();
@@ -167,6 +173,7 @@ private:
     CityManager m_cityManager;
     CurrentWeather m_currentWeather;
     void sendWeather(CurrentWeather *weather);
+    Q_SLOT void sendCurrentWeather();
     Q_SLOT void onCitiesChanged();
     Q_SLOT void onWeatherReady();
 
@@ -176,6 +183,7 @@ private:
     Q_SLOT void navigationChanged(const QString &icon, const QString &narrative, const QString &manDist, int progress);
 
     QDateTime m_lastWeatherSync;
+    bool m_weatherReady = false;
     QDateTime m_lastCalendarSync;
     QDateTime m_lastActivitySync;
 

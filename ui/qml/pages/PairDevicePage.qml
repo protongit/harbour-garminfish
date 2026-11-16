@@ -63,7 +63,9 @@ PageListPL {
         target: DaemonInterfaceInstance
 
         onConnectionStateChanged: {
-            if (DaemonInterfaceInstance.connectionState == "paired" || DaemonInterfaceInstance.connectionState == "connected") {
+            if (DaemonInterfaceInstance.connectionState == "paired"
+                    || DaemonInterfaceInstance.connectionState == "connected"
+                    || DaemonInterfaceInstance.connectionState == "authenticated") {
                 AmazfishConfig.pairedAddress = _deviceAddress
                 AmazfishConfig.pairedName = _deviceName
                 AmazfishConfig.pairedType = _deviceType
@@ -170,12 +172,33 @@ PageListPL {
                     fillMode: Image.PreserveAspectFit
                 }
 
+                LabelPL {
+                    id: forgetLabel
+                    anchors {
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter
+                    }
+                    text: qsTr("Forget")
+                    color: styler.themeSecondaryHighlightColor
+                    font.pixelSize: styler.themeFontSizeSmall
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            page.stopDiscovery();
+                            DaemonInterfaceInstance.unpairDevice(model.Address);
+                            AmazfishConfig.pairedAddress = "";
+                            AmazfishConfig.pairedName = "";
+                            AmazfishConfig.pairedType = "";
+                        }
+                    }
+                }
 
                 LabelPL {
                     id: nameLabel
                     //truncationMode: TruncationMode.Fade
                     anchors.left: iconImage.right
-                    width: parent.width - iconImage.paintedWidth
+                    width: parent.width - iconImage.paintedWidth - forgetLabel.width - styler.themePaddingMedium
                     text: model.FriendlyName
                     color: listItem.pressed ? styler.themeHighlightColor : styler.themePrimaryColor
                 }

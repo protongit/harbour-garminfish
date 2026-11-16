@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(libamazfish STATIC)
+add_library(libgarminfish STATIC)
 
 find_package(Qt5 REQUIRED COMPONENTS Core DBus Xml)
 
@@ -14,8 +14,8 @@ if(FLAVOR STREQUAL "silica")
 endif()
 
 
-target_include_directories(libamazfish PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src ${MLITE5_INCLUDE_DIRS})
-target_link_libraries(libamazfish PUBLIC Qt5::Core Qt5::DBus Qt5::Xml ${MLITE5_LIBRARIES})
+target_include_directories(libgarminfish PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src ${MLITE5_INCLUDE_DIRS})
+target_link_libraries(libgarminfish PUBLIC Qt5::Core Qt5::DBus Qt5::Xml ${MLITE5_LIBRARIES})
 
 set(SOURCES
     ./src/amazfishconfig.cpp
@@ -37,5 +37,5 @@ set(HEADERS
     ./src/activitykind.h
 )
 
-target_sources(libamazfish PUBLIC ${SOURCES} ${HEADERS})
+target_sources(libgarminfish PUBLIC ${SOURCES} ${HEADERS})
 

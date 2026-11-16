@@ -17,7 +17,7 @@
 
 import QtQuick 2.2
 import com.pipacs.o2 1.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import "../tools/JSTools.js" as SharedResources
 import "../components/"
 import "../components/platform"

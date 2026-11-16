@@ -29,7 +29,7 @@ done
     (
         echo "<RCC>"
         echo "    <qresource prefix=\"/\">"
-        echo "        <file>icons/172x172/harbour-amazfish-ui.png</file>"
+        echo "        <file>icons/172x172/harbour-garminfish-ui.png</file>"
         for i in $(find qml/ -type f -name '*.png'|sort); do
             echo "        <file>$i</file>";
         done

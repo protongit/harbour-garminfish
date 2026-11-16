@@ -70,16 +70,16 @@ The project is built with the [Sailfish SDK](https://sailfishos.org/develop/).
 
 ```sh
 git clone <this-fork-url>
-cd harbour-amazfish
+cd harbour-garminfish
 
 # Only the remaining submodules need to be fetched
 git submodule update --init --recursive
 
 # Install the build requirements once in the SDK
-sfdk -c target=<sailfish-target> -c specfile=rpm/harbour-amazfish.spec build-requires
+sfdk -c target=<sailfish-target> -c specfile=rpm/harbour-garminfish.spec build-requires
 
 # Build for the installed Sailfish target
-sfdk -c target=<sailfish-target> -c specfile=rpm/harbour-amazfish.spec build
+sfdk -c target=<sailfish-target> -c specfile=rpm/harbour-garminfish.spec build
 ```
 
 If `build-requires` fails while resolving `bluebinder` or
@@ -93,15 +93,15 @@ sfdk ... build-shell --maintain zypper --non-interactive install ninja amber-mpr
 The RPM is written to `RPMS/`. Install it with:
 
 ```sh
-devel-su pkcon install-local -y --allow-untrusted --allow-downgrade RPMS/harbour-amazfish-*.rpm
+devel-su pkcon install-local -y --allow-untrusted --allow-downgrade RPMS/harbour-garminfish-*.rpm
 ```
 
 After installing, restart both processes (installing an RPM does not restart
 them):
 
 ```sh
-systemctl --user restart harbour-amazfish
-# close and reopen harbour-amazfish-ui
+systemctl --user restart harbour-garminfish
+# close and reopen harbour-garminfish-ui
 ```
 
 ## Notes and privacy

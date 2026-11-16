@@ -1,13 +1,13 @@
 import QtQuick 2.0
 import org.SfietKonstantin.weatherfish 1.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import QtQuick.Layouts 1.1
 import "../components/"
 import "../components/platform"
 
 PagePL {
     id: page
-    title: "Amazfish"
+    title: "GarminFish"
 
     function unpairAccepted() {
         DaemonInterfaceInstance.disconnect();

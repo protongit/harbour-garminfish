@@ -1,4 +1,4 @@
-# Rename this file as harbour-amazfish.changes to include changelog
+# Rename this file as harbour-garminfish.changes to include changelog
 # entries in your RPM file.
 #
 # Add new changelog entries following the format below.
@@ -7,12 +7,12 @@
 #
 # Alternatively, if your changelog is automatically generated (e.g. with
 # the git-change-log command provided with Sailfish OS SDK), create a
-# harbour-amazfish.changes.run script to let mb2 run the required commands for you.
+# harbour-garminfish.changes.run script to let mb2 run the required commands for you.
 
 # * date Author's Name <author's email> version-release
 # - Summary of changes
 
-* Fri May 18 2018 Adam Pigg <adam@piggz.co.uk> 0.4-1
+* Fri May 18 2018 Adam Pigg <adam@protongit.co.uk> 0.4-1
 - New release based on re-written BLE code
 - no new features, but should stay connected
 

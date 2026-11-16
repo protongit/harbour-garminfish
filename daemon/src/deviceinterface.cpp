@@ -728,7 +728,7 @@ void DeviceInterface::setupDatabase()
         return;
     }
 
-    m_connData.setDatabaseName(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)+ "/amazfish.kexi");
+    m_connData.setDatabaseName(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)+ "/garminfish.kexi");
 
     qDebug() << Q_FUNC_INFO << ": Database is: " << m_connData.databaseName();
 
@@ -785,8 +785,8 @@ void DeviceInterface::onConnectionStateChanged()
             if (AmazfishConfig::instance()->appNotifyConnect() && m_notificationBuffer.isEmpty()) {
                 Amazfish::WatchNotification n;
                 n.id = 0;
-                n.appId = "uk.co.piggz.amazfish";
-                n.appName = tr("Amazfish");
+                n.appId = "uk.co.protongit.garminfish";
+                n.appName = tr("GarminFish");
                 n.summary = tr("Connected");
                 n.body = tr("Phone and watch are connected");
                 sendAlert(n, true);
@@ -922,8 +922,8 @@ void DeviceInterface::slot_informationChanged(Amazfish::Info key, const QString 
             if (battery_level <= 10 && battery_level < m_lastBatteryLevel && AmazfishConfig::instance()->appNotifyLowBattery()) {
                 Amazfish::WatchNotification n;
                 n.id = 0;
-                n.appId = "uk.co.piggz.amazfish";
-                n.appName = tr("Amazfish");
+                n.appId = "uk.co.protongit.garminfish";
+                n.appName = tr("GarminFish");
                 n.summary = tr("Low Battery");
                 n.body = tr("Battery level now ") + QString::number(battery_level) + "%";
                 sendAlert(n);
@@ -1078,8 +1078,8 @@ void DeviceInterface::handleButtonPressed(int presses)
         } else if (action == "action-vol-down"){
             m_musicController.volumeDown();
         } else if (action == "action-custom"){
-            //Run custom script in ~/harbour-amazfish-scirpt.sh and pass in press count
-            QString fileName = QDir::homePath() + "/harbour-amazfish-script.sh";
+            //Run custom script in ~/harbour-garminfish-scirpt.sh and pass in press count
+            QString fileName = QDir::homePath() + "/harbour-garminfish-script.sh";
             if (QFile::exists(fileName)) {
                 if (!QProcess::startDetached("/bin/sh", QStringList{fileName,QString::number(presses)})) {
                     qDebug() << "Failed to run" << fileName;
@@ -1100,7 +1100,7 @@ void DeviceInterface::onEventTimer()
     watchfish::CalendarEvent event = m_eventlist.takeFirst();
     Amazfish::WatchNotification n;
     n.id = 0;
-    n.appId = "uk.co.piggz.amazfish.calendar";
+    n.appId = "uk.co.protongit.garminfish.calendar";
     n.appName = tr("Calendar");
     n.summary = event.title();
     n.body = event.description().isEmpty()?" ":event.description();
@@ -1183,9 +1183,9 @@ void DeviceInterface::findDevice()
 
 
 #ifdef UUITK_EDITION
-    QFile file("/opt/click.ubuntu.com/uk.co.piggz.amazfish/current/share/harbour-amazfishd/chirp.raw");
+    QFile file("/opt/click.ubuntu.com/uk.co.protongit.garminfish/current/share/harbour-garminfishd/chirp.raw");
 #else // elif defined(MER_EDITION_SAILFISH)
-    QFile file("/usr/share/harbour-amazfishd/chirp.raw");
+    QFile file("/usr/share/harbour-garminfishd/chirp.raw");
 #endif
 
     if(!file.open(QIODevice::ReadOnly))

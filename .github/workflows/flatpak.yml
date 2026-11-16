@@ -10,13 +10,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        path: harbour-amazfish
+        path: harbour-garminfish
         submodules: true
 
     - uses: actions/checkout@v4
       with:
-        path: uk.co.piggz.amazfish
-        repository: flathub/uk.co.piggz.amazfish
+        path: uk.co.protongit.garminfish
+        repository: flathub/uk.co.protongit.garminfish
 
     - name: Set up Ubuntu runner
       run: sudo apt-get --quiet update --yes
@@ -32,31 +32,31 @@ jobs:
 
     - name: Use dir instead of git tag in flatpak json
       run: |
-        jq 'walk(if type == "object" and .url == "https://github.com/piggz/harbour-amazfish.git" then .type = "dir" | .path = "../harbour-amazfish" | del(.url, .branch, .commit, .tag) else . end)' ${{ github.workspace }}/uk.co.piggz.amazfish/uk.co.piggz.amazfish.json > ${{ github.workspace }}/uk.co.piggz.amazfish/uk.co.piggz.amazfish-ci.json
+        jq 'walk(if type == "object" and .url == "https://github.com/piggz/harbour-amazfish.git" then .type = "dir" | .path = "../harbour-garminfish" | del(.url, .branch, .commit, .tag) else . end)' ${{ github.workspace }}/uk.co.protongit.garminfish/uk.co.protongit.garminfish.json > ${{ github.workspace }}/uk.co.protongit.garminfish/uk.co.protongit.garminfish-ci.json
 
 
     # remove these steps after release of new version and update of flatpak
 
     - name: Use amber-mpris instead of qtmpris in flatpak json
       run: |
-        cd ${{ github.workspace }}/uk.co.piggz.amazfish
-        cp ${{ github.workspace }}/harbour-amazfish/.github/flatpak/*.patch .
-        jq 'walk(if type == "object" and .name == "qtmpris" then .name = "amber-mpris" | .sources = [{"type": "archive", "url": "https://github.com/sailfishos/amber-mpris/archive/refs/tags/1.2.10.tar.gz", "sha256": "a01e38f85c1e88e7db9342672e4588164676fbbccf4d084071eda17fb0ec9014"}, {"type": "patch", "path": "amber-mpris-qmake.patch"}] else . end)' uk.co.piggz.amazfish-ci.json > uk.co.piggz.amazfish-ci.json.tmp
-        mv uk.co.piggz.amazfish-ci.json.tmp uk.co.piggz.amazfish-ci.json
+        cd ${{ github.workspace }}/uk.co.protongit.garminfish
+        cp ${{ github.workspace }}/harbour-garminfish/.github/flatpak/*.patch .
+        jq 'walk(if type == "object" and .name == "qtmpris" then .name = "amber-mpris" | .sources = [{"type": "archive", "url": "https://github.com/sailfishos/amber-mpris/archive/refs/tags/1.2.10.tar.gz", "sha256": "a01e38f85c1e88e7db9342672e4588164676fbbccf4d084071eda17fb0ec9014"}, {"type": "patch", "path": "amber-mpris-qmake.patch"}] else . end)' uk.co.protongit.garminfish-ci.json > uk.co.protongit.garminfish-ci.json.tmp
+        mv uk.co.protongit.garminfish-ci.json.tmp uk.co.protongit.garminfish-ci.json
 
     - name: Validate AppStream metadata
-      run: appstreamcli validate --no-net --explain "${{ github.workspace }}/harbour-amazfish/ui/harbour-amazfish-ui.appdata.xml"
+      run: appstreamcli validate --no-net --explain "${{ github.workspace }}/harbour-garminfish/ui/harbour-garminfish-ui.appdata.xml"
 
     - name: Build development snapshot and package as Flatpak
       run: |
-        cd ${{ github.workspace }}/uk.co.piggz.amazfish
-        flatpak-builder --repo=${{ github.workspace }}/repo --verbose --force-clean --ccache ${{ github.workspace }}/_build ${{ github.workspace }}/uk.co.piggz.amazfish/uk.co.piggz.amazfish-ci.json
+        cd ${{ github.workspace }}/uk.co.protongit.garminfish
+        flatpak-builder --repo=${{ github.workspace }}/repo --verbose --force-clean --ccache ${{ github.workspace }}/_build ${{ github.workspace }}/uk.co.protongit.garminfish/uk.co.protongit.garminfish-ci.json
 
     - name: Export Flatpak as single file bundle
       run: |
-        flatpak build-bundle ${{ github.workspace }}/repo ${{ github.workspace }}/uk.co.piggz.amazfish.flatpak uk.co.piggz.amazfish
+        flatpak build-bundle ${{ github.workspace }}/repo ${{ github.workspace }}/uk.co.protongit.garminfish.flatpak uk.co.protongit.garminfish
 
     - name: Upload Flatpak
       uses: actions/upload-artifact@v4
       with:
-        path: uk.co.piggz.amazfish.flatpak
+        path: uk.co.protongit.garminfish.flatpak

@@ -1,7 +1,7 @@
 #!/bin/sh
 # A-GPS update for the Amazfish "Custom Script" button action.
 #
-# Amazfish runs ~/harbour-amazfish-script.sh with the number of button
+# Amazfish runs ~/harbour-garminfish-script.sh with the number of button
 # presses. On three presses this script downloads fresh A-GPS data with
 # huami-token and hands gps_uihh.bin to the daemon, which sends it to the
 # watch and reports the result. See contrib/agps/README.md for the setup.
@@ -31,7 +31,7 @@ fi
 agps=$(ls -t ./*gps_uihh.bin 2>/dev/null | head -n 1)
 [ -n "$agps" ] || { echo "no gps_uihh.bin downloaded"; exit 1; }
 
-dbus-send --session --print-reply --dest=uk.co.piggz.amazfish /application \
-    uk.co.piggz.amazfish.prepareFirmwareDownload "string:$AGPS_DIR/${agps#./}"
-dbus-send --session --print-reply --dest=uk.co.piggz.amazfish /application \
-    uk.co.piggz.amazfish.startDownload
+dbus-send --session --print-reply --dest=uk.co.protongit.garminfish /application \
+    uk.co.protongit.garminfish.prepareFirmwareDownload "string:$AGPS_DIR/${agps#./}"
+dbus-send --session --print-reply --dest=uk.co.protongit.garminfish /application \
+    uk.co.protongit.garminfish.startDownload

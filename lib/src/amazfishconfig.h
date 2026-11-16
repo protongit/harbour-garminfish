@@ -114,6 +114,10 @@ public:
     Q_ENUM(DisplayLiftWrist)
 
     static AmazfishConfig *instance();
+
+    // Copy the settings and the data of the old Amazfish name on first start.
+    static void migrateLegacyData();
+
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
     {
         Q_UNUSED(engine)

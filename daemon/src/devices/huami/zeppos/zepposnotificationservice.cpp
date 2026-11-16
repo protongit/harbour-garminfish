@@ -102,7 +102,7 @@ void ZeppOsNotificationService::sendAlert(const Amazfish::WatchNotification &not
     cmd += NOTIFICATION_SUBCMD_SHOW;
 
     //Application ID
-    cmd += notification.appId.isEmpty() ? "uk.co.piggz.amazfish" : notification.appId.toLocal8Bit();
+    cmd += notification.appId.isEmpty() ? "uk.co.protongit.garminfish" : notification.appId.toLocal8Bit();
     cmd += (uint8_t)0x00;
 
     //TODO Sender

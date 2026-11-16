@@ -1,6 +1,6 @@
 # A-GPS update with a button press
 
-`harbour-amazfish-script.sh` downloads fresh A-GPS data from the Zepp servers
+`harbour-garminfish-script.sh` downloads fresh A-GPS data from the Zepp servers
 when you press the watch button three times, and hands it to the Amazfish
 daemon, which sends it to the watch. With current A-GPS data the watch finds a
 GPS fix much faster.
@@ -71,13 +71,13 @@ file and update huami-token.
 ## 4. Install the script and set the button action
 
 ```sh
-cp contrib/agps/harbour-amazfish-script.sh ~/harbour-amazfish-script.sh
+cp contrib/agps/harbour-garminfish-script.sh ~/harbour-garminfish-script.sh
 ```
 
 In Amazfish open **Settings > Application Settings > Button Actions**, set
 **Triple Press Action** to **Custom Script** and tap **Save Settings**.
 
-If you already use `~/harbour-amazfish-script.sh` for other actions, call this
+If you already use `~/harbour-garminfish-script.sh` for other actions, call this
 script from yours instead: `sh /path/to/agps-script.sh "$1"`.
 
 ## 5. Use it
@@ -104,4 +104,4 @@ with GPS.
 | `no gps_uihh.bin downloaded` | huami-token ran but saved no `gps_uihh.bin`. Run it by hand (step 3). |
 | `update already running` | A previous press is still being handled. Wait a minute. |
 | `startDownload` answers `false` | Another transfer is still running, or the watch is not connected. Try again later. |
-| No log at all | Set the button action to Custom Script; the script must be `~/harbour-amazfish-script.sh`. |
+| No log at all | Set the button action to Custom Script; the script must be `~/harbour-garminfish-script.sh`. |

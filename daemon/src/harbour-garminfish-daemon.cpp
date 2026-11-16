@@ -19,6 +19,7 @@
 
 #include "deviceinterface.h"
 #include "devicefactory.h"
+#include "amazfishconfig.h"
 
 static void daemonize();
 static void signalHandler(int sig);
@@ -39,12 +40,13 @@ int main(int argc, char **argv)
     qInstallMessageHandler(myMessageOutput);
 
 #ifdef PROJECT_GIT_VERSION
-    qDebug() << "Starting harbour-amazfishd " << PROJECT_GIT_VERSION;
+    qDebug() << "Starting harbour-garminfishd " << PROJECT_GIT_VERSION;
 #endif
 
     QCoreApplication app(argc, argv);
-    QCoreApplication::setOrganizationName("harbour-amazfish");
-    QCoreApplication::setApplicationName("harbour-amazfish");
+    QCoreApplication::setOrganizationName("harbour-garminfish");
+    QCoreApplication::setApplicationName("harbour-garminfish");
+    AmazfishConfig::migrateLegacyData();
 
     if (app.arguments().contains("--features")) {
         DeviceFactory::printAvailableFeatures();
@@ -59,7 +61,7 @@ int main(int argc, char **argv)
 
         QString locale = QLocale::system().name();
         QTranslator *translator = new QTranslator();
-        if ( translator->load(QLocale(), "harbour-amazfishd", "-", tr_path) ) {
+        if ( translator->load(QLocale(), "harbour-garminfishd", "-", tr_path) ) {
             if (app.installTranslator(translator)) {
                 qDebug() << "Install translation success for " << locale << " " << tr_path;
             } else {

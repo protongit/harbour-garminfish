@@ -41,10 +41,10 @@ void Achievements::updateStepsStatus(int steps, int goal)
 
         if (m_metric.isNull() || message != m_lastMessage) {
             m_metric = m_manager->add(
-                UserMetricsInput::MetricParameters("uk.co.piggz.harbour-amazfish.steps-metric")
+                UserMetricsInput::MetricParameters("uk.co.protongit.harbour-garminfish.steps-metric")
                     .formatString(message)
                     .emptyDataString(tr("No data"))
-                    .textDomain("harbour-amazfish"));
+                    .textDomain("harbour-garminfish"));
             m_lastMessage = message;
         }
 

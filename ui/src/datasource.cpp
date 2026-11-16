@@ -938,7 +938,7 @@ QVariantMap DataSource::watchSummary()
 {
     QVariantMap summary;
     summary["databasePath"] = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-            + "/amazfish.kexi";
+            + "/garminfish.kexi";
     summary["garminPath"] = garminDataPath();
 
     // FIT files on disk, grouped by the directory the daemon stores them in.

@@ -6,7 +6,7 @@ import MapboxMap 1.0
 import QtPositioning 5.3
 import QtQuick 2.0
 import QtQuick.Layouts 1.1
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 
 PagePL {
     // array that holds the points

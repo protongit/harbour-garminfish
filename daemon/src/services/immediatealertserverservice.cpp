@@ -27,7 +27,7 @@ public:
 // ---------------------------------------------------------------------------
 
 ImmediateAlertServerService::ImmediateAlertServerService(QDBusConnection bus, unsigned int serviceIndex, QObject *parent)
-    : QBLELocalService(bus, serviceIndex, QString::fromLatin1(UUID_SERVICE_IMMEDIATE_ALERT), QStringLiteral("/uk/co/piggz/amazfish/gatt"), parent)
+    : QBLELocalService(bus, serviceIndex, QString::fromLatin1(UUID_SERVICE_IMMEDIATE_ALERT), QStringLiteral("/uk/co/protongit/garminfish/gatt"), parent)
 {
     auto *alertLevel = new AlertLevelCharacteristic(bus, 0, this);
     addCharacteristic(alertLevel);

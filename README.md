@@ -18,7 +18,7 @@
 > Licensed under **GPL-3.0**, same as upstream. All original copyright belongs
 > to the Amazfish contributors.
 
-[![Translation status](https://hosted.weblate.org/widget/harbour-amazfish/svg-badge.svg)](https://hosted.weblate.org/engage/harbour-amazfish/)
+[![Translation status](https://hosted.weblate.org/widget/harbour-garminfish/svg-badge.svg)](https://hosted.weblate.org/engage/harbour-garminfish/)
 
 # GarminFish
 
@@ -54,7 +54,7 @@ Build and install this fork from source with the Sailfish SDK; see
 [FORK.md](FORK.md) for the commands.
 
 For the upstream app and its downloads, see
-[piggz/harbour-amazfish](https://github.com/piggz/harbour-amazfish).
+[piggz/harbour-garminfish](https://github.com/piggz/harbour-amazfish).
 
 ## License and attribution
 

@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import "../components"
 import "../components/platform"
 
@@ -204,10 +204,10 @@ PagePL {
 
                 ListElement {
                     itemText: qsTr("Alert")
-                    appId: "uk.co.piggz.amazfish"
+                    appId: "uk.co.protongit.garminfish"
                     appName: qsTr("Somebody")
                     summary: qsTr("Title")
-                    body: qsTr("Hello from Amazfish app. This is a long message sent over BLE!")
+                    body: qsTr("Hello from GarminFish app. This is a long message sent over BLE!")
                 }
 
                 // Incoming notification 114 Notification(appId="Lomiri Telephony Service Indicator", appName="Lomiri Telephony Service Indicator", summary="Sender", body="This is example sms message\n", appIcon="/usr/share/lomiri-telephony-service/assets/avatar-default@18.png", hints=QHash(("x-lomiri-switch-to-application", "true")), timeout=-1, actions=("notification_action", "View message"))
@@ -237,21 +237,21 @@ PagePL {
                     itemText: qsTr("Telegram message")
                     appId: "teleports.ubports"
                     appName: "TELEports"
-                    summary: "Amazfish"
+                    summary: "GarminFish"
                     body: "Some message on telegram"
                 }
                 ListElement {
                     itemText: qsTr("Matrix message")
                     appId: "cinny.danfro_cinny"
                     appName: "Cinny UT"
-                    summary: "Amazfish"
+                    summary: "GarminFish"
                     body: "Some message on matrix"
                 }
                 ListElement {
                     itemText: qsTr("Slack message")
                     appId: "harbour-sailslack"
                     appName: "Sailslack"
-                    summary: "Amazfish"
+                    summary: "GarminFish"
                     body: "Some message on slack"
                 }
 

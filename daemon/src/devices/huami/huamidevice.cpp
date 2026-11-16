@@ -186,7 +186,7 @@ void HuamiDevice::navigationRunning(bool running)
     }
     Amazfish::WatchNotification n;
     n.id = 0;
-    n.appId = "uk.co.piggz.amazfish.navigation";
+    n.appId = "uk.co.protongit.garminfish.navigation";
     n.appName = "navigation";
     n.summary = msg;
     n.body = "";
@@ -200,7 +200,7 @@ void HuamiDevice::navigationNarrative(const QString &flag, const QString &narrat
 
     Amazfish::WatchNotification n;
     n.id = 0;
-    n.appId = "uk.co.piggz.amazfish.navigation";
+    n.appId = "uk.co.protongit.garminfish.navigation";
     n.appName = "navigation";
     n.summary = tr("Progress") + ":" + QString::number(progress);
     n.body = narrative + "\n" + manDist;

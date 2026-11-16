@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-  <name>Amazfish</name>
+  <name>GarminFish</name>
   <summary>Smart watch sync app</summary>
-  <id>uk.co.piggz.amazfish</id>
-  <launchable type="desktop-id">harbour-amazfish-ui.desktop</launchable>
+  <id>uk.co.protongit.garminfish</id>
+  <launchable type="desktop-id">harbour-garminfish-ui.desktop</launchable>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0</project_license>
   <description>
     <p>
-        Companion application for Huami Devices (such as Amazfit Bip, Cor, MiBand2/3 and GTS and GTS) and the Pinetime Infinitime.
+        GarminFish is a fork of Amazfish with added support for Garmin devices. It also keeps the Huami, Pinetime and Bangle.js support of the original app.
     </p>
   </description>
   <url type="homepage">https://amazfish.github.io/</url>
   <url type="vcs-browser">https://github.com/piggz/harbour-amazfish</url>
   <url type="bugtracker">https://github.com/piggz/harbour-amazfish/issues</url>
   <url type="donation">https://liberapay.com/adampigg</url>
-  <url type="translate">https://hosted.weblate.org/projects/harbour-amazfish/</url>
+  <url type="translate">https://hosted.weblate.org/projects/harbour-garminfish/</url>
   <requires>
     <display_length compare="ge">300</display_length>
   </requires>

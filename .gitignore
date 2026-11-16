@@ -1,4 +1,4 @@
-harbour-amazfish.pro.user*
+harbour-garminfish.pro.user*
 .clickable/
 3rdparty/
 build/
@@ -17,9 +17,9 @@ RPMS/
 *.so
 *_autogen/
 *.qm
-daemon/harbour-amazfishd
-ui/harbour-amazfish-ui
-daemon/harbour-amazfish.service
+daemon/harbour-garminfishd
+ui/harbour-garminfish-ui
+daemon/harbour-garminfish.service
 
 # Generated D-Bus interfaces inside the vendored libwatchfish
 daemon/libwatchfish/*_interface.*

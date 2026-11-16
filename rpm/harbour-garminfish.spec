@@ -11,7 +11,8 @@
 %define __provides_exclude_from ^%{_datadir}/.*$
 %endif
 
-Name:       harbour-amazfish
+Name:       harbour-garminfish
+Obsoletes:  harbour-amazfish < 2.9.1
 
 # >> macros
 # << macros
@@ -21,12 +22,12 @@ Name:       harbour-amazfish
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 
-Summary:    Watch interface application
+Summary:    GarminFish watch interface application
 Version:    2.9.0
 Release:    1
 Group:      QtQt
 License:    GPLv3
-URL:        https://piggz.co.uk
+URL:        https://github.com/protongit/harbour-garminfish
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
 Requires:   kdb-sqlite3-driver >= 3.1.0
@@ -61,25 +62,25 @@ BuildRequires:  cmake
 BuildRequires:  ninja
 
 %description
-Watch companion application for SalfishOS
+GarminFish watch companion application for SailfishOS (fork of Amazfish)
 
 %if 0%{?_chum}
-Title: Amazfish
+Title: GarminFish
 Type: desktop-application
 DeveloperName: Adam Pigg
 Categories:
  - Utility
 Custom:
-  Repo: https://github.com/piggz/harbour-amazfish
-PackageIcon: https://raw.githubusercontent.com/piggz/harbour-amazfish/master/ui/icons/scalable/harbour-amazfish-ui.svg
+  Repo: https://github.com/protongit/harbour-garminfish
+PackageIcon: https://raw.githubusercontent.com/protongit/harbour-garminfish/master/ui/icons/scalable/harbour-garminfish-ui.svg
 Screenshots:
- - https://github.com/piggz/harbour-amazfish/raw/master/screenshots/screenshot_main.png
- - https://github.com/piggz/harbour-amazfish/raw/master/screenshots/screenshot_activity.png
- - https://github.com/piggz/harbour-amazfish/raw/master/screenshots/screenshot_sleep.png
+ - https://github.com/protongit/harbour-garminfish/raw/master/screenshots/screenshot_main.png
+ - https://github.com/protongit/harbour-garminfish/raw/master/screenshots/screenshot_activity.png
+ - https://github.com/protongit/harbour-garminfish/raw/master/screenshots/screenshot_sleep.png
 Links:
-  Homepage: https://github.com/piggz/harbour-amazfish
-  Help: https://github.com/piggz/harbour-amazfish/discussions
-  Bugtracker: https://github.com/piggz/harbour-amazfish/issues
+  Homepage: https://github.com/protongit/harbour-garminfish
+  Help: https://github.com/protongit/harbour-garminfish/discussions
+  Bugtracker: https://github.com/protongit/harbour-garminfish/issues
   Donation: https://www.paypal.me/piggz
 %endif
 
@@ -125,7 +126,7 @@ desktop-file-install --delete-original       \
 
 rm -rf %{buildroot}/usr/include/o2
 rm -f %{buildroot}/usr/lib/libo2.a
-rm -f %{buildroot}/usr/share/metainfo/harbour-amazfish-ui.appdata.xml
+rm -f %{buildroot}/usr/share/metainfo/harbour-garminfish-ui.appdata.xml
 
 %files
 %defattr(-,root,root,-)
@@ -137,8 +138,8 @@ rm -f %{buildroot}/usr/share/metainfo/harbour-amazfish-ui.appdata.xml
 %{_datadir}/applications/%{name}-ui.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}-ui.png
 %{_datadir}/icons/hicolor/scalable/apps/%{name}-ui.svg
-%{_userunitdir}/harbour-amazfish.service
-%{_datadir}/mapplauncherd/privileges.d/harbour-amazfishd.privileges
-%{_datadir}/harbour-amazfishd/chirp.raw
+%{_userunitdir}/harbour-garminfish.service
+%{_datadir}/mapplauncherd/privileges.d/harbour-garminfishd.privileges
+%{_datadir}/harbour-garminfishd/chirp.raw
 # >> files
 # << files

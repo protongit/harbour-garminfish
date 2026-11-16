@@ -50,7 +50,7 @@ QByteArray encryptDecrypt(QByteArray toEncrypt) {
 int main(int argc, char *argv[])
 {
 #ifdef PROJECT_GIT_VERSION
-    qDebug() << "Starting harbour-amazfish-ui " << PROJECT_GIT_VERSION;
+    qDebug() << "Starting harbour-garminfish-ui " << PROJECT_GIT_VERSION;
 #endif
 
     QGuiApplication *app;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         QString locale = QLocale::system().name();
         QTranslator *translator = new QTranslator();
 
-        if ( !translator->load(QLocale(), "harbour-amazfish-ui", "-", tr_path) ) {
+        if ( !translator->load(QLocale(), "harbour-garminfish-ui", "-", tr_path) ) {
             qWarning() << "Failed to load translation for " << locale << " " << tr_path;
         }
 
@@ -76,10 +76,11 @@ int main(int argc, char *argv[])
 
 #endif
 
-    QCoreApplication::setOrganizationName("harbour-amazfish");
-    QCoreApplication::setOrganizationDomain("piggz.co.uk");
-    QCoreApplication::setApplicationName("harbour-amazfish");
-    QGuiApplication::setApplicationDisplayName("Amazfish");
+    QCoreApplication::setOrganizationName("harbour-garminfish");
+    QCoreApplication::setOrganizationDomain("protongit.co.uk");
+    QCoreApplication::setApplicationName("harbour-garminfish");
+    QGuiApplication::setApplicationDisplayName("GarminFish");
+    AmazfishConfig::migrateLegacyData();
 
     // disable new QML connection syntax debug messages for as long as
     // older Qt versions (5.12 and older) are supported
@@ -107,13 +108,13 @@ int main(int argc, char *argv[])
     qmlRegisterType<CityManager>("org.SfietKonstantin.weatherfish", 1, 0, "CityManager");
     qmlRegisterType<City>("org.SfietKonstantin.weatherfish", 1, 0, "City");
     qmlRegisterType<CurrentWeather>("org.SfietKonstantin.weatherfish", 1, 0, "CurrentWeather");
-    qmlRegisterType<TrackLoader>("uk.co.piggz.amazfish", 1, 0, "TrackLoader");
+    qmlRegisterType<TrackLoader>("uk.co.protongit.garminfish", 1, 0, "TrackLoader");
     qmlRegisterType<O2>("com.pipacs.o2", 1, 0, "O2");
 
-    qmlRegisterUncreatableType<DataSource>("uk.co.piggz.amazfish", 1, 0, "DataSource", "Data Source type available only for enum datatypes");
-    qmlRegisterUncreatableType<Amazfish>("uk.co.piggz.amazfish", 1, 0, "Amazfish", "Amazfish type available only for enum datatypes");
+    qmlRegisterUncreatableType<DataSource>("uk.co.protongit.garminfish", 1, 0, "DataSource", "Data Source type available only for enum datatypes");
+    qmlRegisterUncreatableType<Amazfish>("uk.co.protongit.garminfish", 1, 0, "Amazfish", "Amazfish type available only for enum datatypes");
 
-    qmlRegisterSingletonType<AmazfishConfig>("uk.co.piggz.amazfish", 1, 0, "AmazfishConfig", AmazfishConfig::qmlInstance);
+    qmlRegisterSingletonType<AmazfishConfig>("uk.co.protongit.garminfish", 1, 0, "AmazfishConfig", AmazfishConfig::qmlInstance);
 
 
 #ifdef MER_EDITION_SAILFISH
@@ -137,16 +138,16 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef MER_EDITION_SAILFISH
-    view->setSource(QUrl("qrc:/qml/harbour-amazfish.qml"));
+    view->setSource(QUrl("qrc:/qml/harbour-garminfish.qml"));
     view->show();
 #elif UUITK_EDITION
     view->rootContext()->setContextProperty("APPLICATION_FILE_DIR",  QFileInfo(QCoreApplication::applicationFilePath()).absolutePath());
-    view->load(QUrl("qrc:/qml/harbour-amazfish.qml"));
+    view->load(QUrl("qrc:/qml/harbour-garminfish.qml"));
 #else
-    view->load(QUrl("qrc:/qml/harbour-amazfish.qml"));
+    view->load(QUrl("qrc:/qml/harbour-garminfish.qml"));
 
     if (QQuickWindow* window = qobject_cast<QQuickWindow*>(view->rootObjects().at(0))) {
-        window->setIcon(QIcon(":/icons/172x172/harbour-amazfish-ui.png"));
+        window->setIcon(QIcon(":/icons/172x172/harbour-garminfish-ui.png"));
     }
 
 #endif

@@ -64,7 +64,7 @@ set(SOURCES
 ./src/devices/infinitimefirmwareinfo.cpp
 ./src/devices/dk08device.cpp
 ./src/devices/huami/uihhcontainer.cpp
-./src/harbour-amazfish-daemon.cpp
+./src/harbour-garminfish-daemon.cpp
 ./src/huamiweathercondition.cpp
 ./src/navigationinterface.cpp
 ./src/operations/abstractfetchoperation.cpp
@@ -308,7 +308,7 @@ set(HEADERS
 ./src/ecdh/ecdh.h
 )
 
-add_executable(harbour-amazfishd ${SOURCES} ${HEADERS}
+add_executable(harbour-garminfishd ${SOURCES} ${HEADERS}
 )
 
 find_package(PkgConfig REQUIRED)
@@ -318,32 +318,32 @@ find_package(ZLIB REQUIRED)
 find_package(ICU REQUIRED COMPONENTS uc i18n data)
 find_package(KDb REQUIRED)
 
-target_compile_options(harbour-amazfishd PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(harbour-garminfishd PRIVATE -Wall -Wextra -Wpedantic)
 
 if(FLAVOR STREQUAL "silica")
     set(WATCHFISH_FEATURES "notificationmonitor;music;calendar;voicecall;soundprofile")
 
     pkg_check_modules(PULSE REQUIRED libpulse)
-    target_include_directories(harbour-amazfishd PUBLIC ${PULSE_INCLUDE_DIRS})
-    target_link_libraries(harbour-amazfishd PUBLIC ${PULSE_LIBRARIES} pulse-simple)
+    target_include_directories(harbour-garminfishd PUBLIC ${PULSE_INCLUDE_DIRS})
+    target_link_libraries(harbour-garminfishd PUBLIC ${PULSE_LIBRARIES} pulse-simple)
 
     pkg_check_modules(MLITE5 REQUIRED mlite5)
-    target_include_directories(harbour-amazfishd PUBLIC ${MLITE5_INCLUDE_DIRS})
-    target_link_libraries(harbour-amazfishd PUBLIC ${MLITE5_LIBRARIES})
+    target_include_directories(harbour-garminfishd PUBLIC ${MLITE5_INCLUDE_DIRS})
+    target_link_libraries(harbour-garminfishd PUBLIC ${MLITE5_LIBRARIES})
 
-    target_link_libraries(harbour-amazfishd PUBLIC keepalive)
+    target_link_libraries(harbour-garminfishd PUBLIC keepalive)
 
 elseif(FLAVOR STREQUAL "uuitk")
     set(WATCHFISH_FEATURES "notificationmonitor;music;calendar;voicecall;soundprofile")
 
     pkg_check_modules(PULSE REQUIRED libpulse)
-    target_include_directories(harbour-amazfishd PUBLIC ${PULSE_INCLUDE_DIRS})
-    target_link_libraries(harbour-amazfishd PUBLIC ${PULSE_LIBRARIES} pulse-simple)
+    target_include_directories(harbour-garminfishd PUBLIC ${PULSE_INCLUDE_DIRS})
+    target_link_libraries(harbour-garminfishd PUBLIC ${PULSE_LIBRARIES} pulse-simple)
 
     pkg_check_modules(LIBUSERMETRICSINPUT REQUIRED libusermetricsinput-1)
 
-    target_include_directories(harbour-amazfishd PUBLIC ${LIBUSERMETRICSINPUT_INCLUDE_DIRS})
-    target_link_libraries(harbour-amazfishd PUBLIC ${LIBUSERMETRICSINPUT_LIBRARIES})
+    target_include_directories(harbour-garminfishd PUBLIC ${LIBUSERMETRICSINPUT_INCLUDE_DIRS})
+    target_link_libraries(harbour-garminfishd PUBLIC ${LIBUSERMETRICSINPUT_LIBRARIES})
 else()
     set(WATCHFISH_FEATURES "notificationmonitor;music;calendar;soundprofile")
 endif()
@@ -351,10 +351,10 @@ endif()
 add_subdirectory(libwatchfish)
 add_subdirectory(Qt-AES)
 
-install(TARGETS harbour-amazfishd RUNTIME
+install(TARGETS harbour-garminfishd RUNTIME
         DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-target_include_directories(harbour-amazfishd PUBLIC
+target_include_directories(harbour-garminfishd PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/devices
     ${CMAKE_CURRENT_SOURCE_DIR}/src/operations
@@ -362,12 +362,12 @@ target_include_directories(harbour-amazfishd PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
-target_compile_definitions(harbour-amazfishd
+target_compile_definitions(harbour-garminfishd
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
-target_link_libraries(harbour-amazfishd
+target_link_libraries(harbour-garminfishd
   PRIVATE
-  libwatchfish libamazfish qble
+  libwatchfish libgarminfish qble
   Qt5::Gui Qt5::Widgets Qt5::Core Qt5::Positioning Qt5::Network
   KF5::Archive
   ZLIB::ZLIB
@@ -381,36 +381,36 @@ file(GLOB TS_FILES translations/*.ts)
 
 # TODO check if translation path is correct on all platforms
 if(FLAVOR STREQUAL "uuitk")
-    add_definitions(-DTRANSLATION_FOLDER="../share/harbour-amazfishd/translations")
+    add_definitions(-DTRANSLATION_FOLDER="../share/harbour-garminfishd/translations")
 else()
-    add_definitions(-DTRANSLATION_FOLDER="${CMAKE_INSTALL_FULL_DATAROOTDIR}/harbour-amazfishd/translations")
+    add_definitions(-DTRANSLATION_FOLDER="${CMAKE_INSTALL_FULL_DATAROOTDIR}/harbour-garminfishd/translations")
 endif()
 
 
 QT5_ADD_TRANSLATION(QM_FILES ${TS_FILES})
 add_custom_target(daemon_translations DEPENDS ${QM_FILES})
-add_dependencies(harbour-amazfishd daemon_translations)
+add_dependencies(harbour-garminfishd daemon_translations)
 
 QT5_CREATE_TRANSLATION(QT_FILES "${CMAKE_SOURCE_DIR}"
     OPTIONS "-no-obsolete")
 
 install(FILES ${QM_FILES}
-    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/harbour-amazfishd/translations")
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/harbour-garminfishd/translations")
 
 install(FILES "chirp.raw"
-    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/harbour-amazfishd/")
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/harbour-garminfishd/")
 
-install(FILES "harbour-amazfishd.privileges"
+install(FILES "harbour-garminfishd.privileges"
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/mapplauncherd/privileges.d/")
 
 if(FLAVOR STREQUAL "silica")
-    configure_file(harbour-amazfish-sailfish.service.in
-        ${CMAKE_CURRENT_BINARY_DIR}/harbour-amazfish.service)
+    configure_file(harbour-garminfish-sailfish.service.in
+        ${CMAKE_CURRENT_BINARY_DIR}/harbour-garminfish.service)
 else()
-    configure_file(harbour-amazfish.service.in
-        ${CMAKE_CURRENT_BINARY_DIR}/harbour-amazfish.service)
+    configure_file(harbour-garminfish.service.in
+        ${CMAKE_CURRENT_BINARY_DIR}/harbour-garminfish.service)
 endif()
 
 set(SYSTEMD_USER_UNIT_DIR "lib/systemd/user" CACHE PATH "Directory for systemd user units")
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/harbour-amazfish.service
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/harbour-garminfish.service
     DESTINATION ${SYSTEMD_USER_UNIT_DIR})

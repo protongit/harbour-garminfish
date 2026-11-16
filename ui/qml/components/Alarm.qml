@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import "."
 import "./platform"
 

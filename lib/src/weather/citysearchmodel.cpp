@@ -175,7 +175,7 @@ CitySearchModel::Status CitySearchModel::handleFinished(const QByteArray &reply)
         query.addQueryItem(QLatin1String("zoom"), QLatin1String("6"));
         query.addQueryItem(QLatin1String("lat"), QString::number(city->lat));
         query.addQueryItem(QLatin1String("lon"), QString::number(city->lon));
-        query.addQueryItem(QLatin1String("email"), QLatin1String("amazfish@piggz.co.uk"));
+        query.addQueryItem(QLatin1String("email"), QLatin1String("amazfish@protongit.co.uk"));
         
         url.setQuery(query);
 

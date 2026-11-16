@@ -1,7 +1,7 @@
 clickable_minimum_required: 8.6.0
 
 prebuild: git submodule update --init
-kill: harbour-amazfish
+kill: harbour-garminfish
 ignore_review_errors: true
 
 builder: cmake

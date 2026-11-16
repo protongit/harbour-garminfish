@@ -1,4 +1,4 @@
-Name: harbour-amazfish
+Name: harbour-garminfish
 Summary: Amazfit Bip interface application
 Version: 1.8.0
 Release: 1
@@ -59,8 +59,8 @@ Files:
   - '%{_datadir}/%{name}-ui'
   - '%{_datadir}/applications/%{name}-ui.desktop'
   - '%{_datadir}/icons/hicolor/*/apps/%{name}-ui.png'
-  - '%{_libdir}/systemd/user/harbour-amazfish.service'
-  - '%{_datadir}/mapplauncherd/privileges.d/harbour-amazfishd.privileges'
+  - '%{_libdir}/systemd/user/harbour-garminfish.service'
+  - '%{_datadir}/mapplauncherd/privileges.d/harbour-garminfishd.privileges'
 
 # For more information about yaml and what's supported in Sailfish OS
 # build system, please see https://wiki.merproject.org/wiki/Spectacle

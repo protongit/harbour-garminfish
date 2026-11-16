@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(harbour-amazfish LANGUAGES CXX C)
+project(harbour-garminfish LANGUAGES CXX C)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

@@ -3,7 +3,7 @@ import "pages"
 //import Nemo.Notifications 1.0
 import org.SfietKonstantin.weatherfish 1.0
 import Nemo.DBus 2.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import com.pipacs.o2 1.0
 import "./components/"
 import "./components/platform"
@@ -134,7 +134,7 @@ ApplicationWindowPL
         id: systemdServiceIface
         bus: DBus.SessionBus
         service: 'org.freedesktop.systemd1'
-        path: '/org/freedesktop/systemd1/unit/harbour_2damazfish_2eservice'
+        path: '/org/freedesktop/systemd1/unit/harbour_2dgarminfish_2eservice'
         iface: 'org.freedesktop.systemd1.Unit'
 
         signalsEnabled: true
@@ -161,14 +161,14 @@ ApplicationWindowPL
 
         function enableService() {
             if(ENABLE_SYSTEMD === "YES") {
-                systemdManager.typedCall("EnableUnitFiles", [{"type":"as", "value":["harbour-amazfish.service"]}, {"type":"b", "value":false}, {"type":"b", "value":true}])
+                systemdManager.typedCall("EnableUnitFiles", [{"type":"as", "value":["harbour-garminfish.service"]}, {"type":"b", "value":false}, {"type":"b", "value":true}])
                 reload();
             }
         }
 
         function disableService() {
             if (ENABLE_SYSTEMD === "YES") {
-                systemdManager.typedCall("DisableUnitFiles", [{"type":"as", "value":["harbour-amazfish.service"]}, {"type":"b", "value":false}])
+                systemdManager.typedCall("DisableUnitFiles", [{"type":"as", "value":["harbour-garminfish.service"]}, {"type":"b", "value":false}])
                 reload();
             }
         }

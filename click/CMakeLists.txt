@@ -5,8 +5,8 @@ execute_process(
 )
 set(QT_IMPORTS_DIR "lib/${ARCH_TRIPLET}")
 
-set(PROJECT_NAME "harbour-amazfish")
-set(FULL_PROJECT_NAME "uk.co.piggz.amazfish")
+set(PROJECT_NAME "harbour-garminfish")
+set(FULL_PROJECT_NAME "uk.co.protongit.garminfish")
 set(DATA_DIR /)
 set(DESKTOP_FILE_NAME ${PROJECT_NAME}-ui.desktop)
 

@@ -1,15 +1,15 @@
 {
-    "name": "uk.co.piggz.amazfish",
+    "name": "uk.co.protongit.garminfish",
     "description": "Smart watch sync app",
     "architecture": "@CLICK_ARCH@",
     "title": "Amazfish",
     "hooks": {
-        "harbour-amazfish": {
-            "apparmor": "harbour-amazfish.apparmor",
-            "desktop":  "harbour-amazfish-ui.desktop"
+        "harbour-garminfish": {
+            "apparmor": "harbour-garminfish.apparmor",
+            "desktop":  "harbour-garminfish-ui.desktop"
         }
     },
     "version": "2.9.0-@CLICK_FRAMEWORK_BASE@",
-    "maintainer": "Adam Pigg <adam@piggz.co.uk>",
+    "maintainer": "Adam Pigg <adam@protongit.co.uk>",
     "framework" : "@CLICK_FRAMEWORK@"
 }

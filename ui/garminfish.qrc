@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/cover/CoverPage.qml</file>
-        <file>qml/harbour-amazfish.qml</file>
+        <file>qml/harbour-garminfish.qml</file>
         <file>qml/pages/AddCityPage.qml</file>
         <file>qml/pages/AnalysisPage.qml</file>
         <file>qml/pages/AuthKeyDialog.qml</file>

@@ -309,7 +309,7 @@ void DaemonInterface::connectDatabase()
         return;
     }
 
-    m_connData.setDatabaseName(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).append("/amazfish.kexi"));
+    m_connData.setDatabaseName(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).append("/garminfish.kexi"));
 
     qDebug() << "Database is: " << m_connData.databaseName();
 

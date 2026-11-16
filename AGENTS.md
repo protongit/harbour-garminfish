@@ -2,7 +2,7 @@
 
 **This file contains specific instructions for AI agents when contributing to this project.**
 
-Amazfish is a companion app for smartwatches: Huami/Zepp, InfiniTime, Bangle.js, AsteroidOS, Pebble and DK08.
+GarminFish (a fork of Amazfish) is a companion app for smartwatches: Huami/Zepp, InfiniTime, Bangle.js, AsteroidOS, Pebble and DK08.
 
 - `daemon/` talks to the watch over Bluetooth LE and exposes D-Bus.
 - `ui/` is QML, with one component set per platform.
@@ -114,7 +114,7 @@ When uncertain, do less.
 User documentation lives in https://github.com/amazfish/amazfish.github.io. When a change affects users,
 also prepare the matching change there, or say what needs updating.
 
-The device feature tables come from `harbour-amazfishd --features`
+The device feature tables come from `harbour-garminfishd --features`
 (`DeviceFactory::printAvailableFeatures()` in `daemon/src/devicefactory.cpp`). It writes one `<Device>.md` per
 device into the current directory, with `Y` or `N` for each feature and data type.
 

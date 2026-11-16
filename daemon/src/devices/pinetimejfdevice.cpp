@@ -548,7 +548,7 @@ void PinetimeJFDevice::setupGattServer()
     qDebug() << Q_FUNC_INFO << "Setting up IAS GATT server for PineTime";
 
     // Application root — implements org.freedesktop.DBus.ObjectManager on system bus
-    m_iasApp = new QBLELocalApplication(QStringLiteral("/uk/co/piggz/amazfish/gatt"), this);
+    m_iasApp = new QBLELocalApplication(QStringLiteral("/uk/co/protongit/garminfish/gatt"), this);
 
     // IAS service (index 0), UUID 0x1802
     m_iasService = new ImmediateAlertServerService(QDBusConnection::systemBus(), 0, m_iasApp);

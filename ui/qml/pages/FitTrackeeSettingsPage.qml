@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Adam Pigg <adam@piggz.co.uk>
+ * Copyright (C) 2017 Adam Pigg <adam@protongit.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 import QtQuick 2.0
 import com.pipacs.o2 1.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import "../components/"
 import "../components/platform"
 

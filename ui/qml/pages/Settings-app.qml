@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import "../components"
 import "../components/platform"
 
@@ -102,7 +102,7 @@ PagePL {
         }
 
         SectionHeaderPL {
-            text: qsTr("Amazfish Service")
+            text: qsTr("GarminFish Service")
             visible: (ENABLE_SYSTEMD === "YES")
         }
 
@@ -123,7 +123,7 @@ PagePL {
         }
 
         LabelPL {
-            text: qsTr("Start/Stop the Amazfish Background Service")
+            text: qsTr("Start/Stop the GarminFish Background Service")
             visible: (ENABLE_SYSTEMD === "YES")
             anchors.left: parent.left
             anchors.right: parent.right;

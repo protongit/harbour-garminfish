@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import org.kde.bluezqt 1.0 as BluezQt
 import QtQml.Models 2.2
-import uk.co.piggz.amazfish 1.0
+import uk.co.protongit.garminfish 1.0
 import "../components"
 import "../components/platform"
 

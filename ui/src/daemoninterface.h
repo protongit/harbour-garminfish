@@ -14,7 +14,7 @@
 #include "datasource.h"
 #include "amazfish.h"
 
-#define SERVICE_NAME "uk.co.piggz.amazfish"
+#define SERVICE_NAME "uk.co.protongit.garminfish"
 
 class DaemonInterface : public QObject
 {

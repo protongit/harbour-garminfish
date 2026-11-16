@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>icons/172x172/harbour-amazfish-ui.png</file>
+        <file>icons/172x172/harbour-garminfish-ui.png</file>
         <file>qml/activity-icons/icon-m-activity.png</file>
         <file>qml/activity-icons/icon-m-americanfootball.png</file>
         <file>qml/activity-icons/icon-m-atv.png</file>

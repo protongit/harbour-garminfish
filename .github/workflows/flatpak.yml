@@ -34,7 +34,6 @@ jobs:
       run: |
         jq 'walk(if type == "object" and .url == "https://github.com/piggz/harbour-amazfish.git" then .type = "dir" | .path = "../harbour-garminfish" | del(.url, .branch, .commit, .tag) else . end)' ${{ github.workspace }}/uk.co.protongit.garminfish/uk.co.protongit.garminfish.json > ${{ github.workspace }}/uk.co.protongit.garminfish/uk.co.protongit.garminfish-ci.json
 
-
     # remove these steps after release of new version and update of flatpak
 
     - name: Use amber-mpris instead of qtmpris in flatpak json

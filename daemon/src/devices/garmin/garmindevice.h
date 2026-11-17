@@ -49,6 +49,8 @@ public slots:
     void onPropertiesChanged(QString interface, QVariantMap map, QStringList list);
     void onAnswerCallEvent();
     void onRejectCallEvent();
+    void onFindPhoneRequested();
+    void onFindPhoneCancelled();
     void onMusicControlCommand(quint8 command);
     void onMusicCapabilitiesRequested();
     void onSyncStarted(int totalFiles);

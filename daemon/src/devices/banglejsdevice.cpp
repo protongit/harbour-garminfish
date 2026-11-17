@@ -563,7 +563,13 @@ void BangleJSDevice::handleRxJson(const QJsonObject &json)
 
 //            emit deviceEvent(AbstractDevice::EVENT_APP_MUSIC);
 
-//    } else if (t == "call") {
+    } else if (t == "call") { // answer from the call screen on the watch
+        QString answer = json.value("n").toString();
+        if (answer == "ACCEPT") {
+            emit deviceEvent(AbstractDevice::EVENT_ANSWER_CALL);
+        } else if (answer == "REJECT") {
+            emit deviceEvent(AbstractDevice::EVENT_DECLINE_CALL);
+        }
 //    } else if (t == "notify") {
     } else if (t == "actfetch") {
         int sample_count = json.value("count").toInt();
@@ -700,27 +706,26 @@ void BangleJSDevice::networkReply()
         return;
     }
 
-    if (reply->error() != QNetworkReply::NoError) {
-        qDebug() << "Error:" << reply->errorString();
+    QByteArray data = reply->readAll();
+    int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    qDebug() << "HTTP status:" << status << "response size:" << data.size() << reply->errorString()
+             << "redirect:" << reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
 
-        QJsonObject p;
-        p.insert("t", "http");
-        p.insert("err", reply->errorString());
-
-        uart->txJson(p);
-
-    } else {
-
-        QByteArray data = reply->readAll();
-        qDebug() << "Response size:" << data.size();
-
-        QJsonObject p;
-        p.insert("t", "http");
+    QJsonObject p;
+    p.insert("t", "http");
+    if (!id.isEmpty()) { // watch matches reply by id, do not invent one
         p.insert("id", id);
-        p.insert("resp", QString::fromUtf8(data));
-
-        uart->txJson(p);
     }
+
+    if (reply->error() != QNetworkReply::NoError) {
+        p.insert("err", reply->errorString());
+    } else if (data.isEmpty()) {
+        p.insert("err", QString("Empty response, HTTP status %1").arg(status));
+    } else {
+        p.insert("resp", QString::fromUtf8(data));
+    }
+
+    uart->txJson(p);
 
     reply->deleteLater();
 }
@@ -1168,7 +1173,14 @@ void BangleJSDevice::syncCalendar(QList<watchfish::CalendarEvent> &eventlist)
         return;
     }
     setOperationRunning(true);
-    m_eventlist = eventlist;
+
+    // The watch rewrites its whole calendar file for every event, so send only the next few
+    const int maxEvents = 10;
+    QList<watchfish::CalendarEvent> events = eventlist;
+    std::sort(events.begin(), events.end(), [](const watchfish::CalendarEvent& a, const watchfish::CalendarEvent& b) {
+        return a.start() < b.start();
+    });
+    m_eventlist = events.mid(0, maxEvents);
     forceCalendarSync();
 }
 
@@ -1275,8 +1287,11 @@ void BangleJSDevice::sendCalendarEvent(int id, const watchfish::CalendarEvent &e
     o.insert("description", description.left(200));
     o.insert("location", event.location().left(40));
     o.insert("calName", "amazfish");
-    o.insert("color", (int)0xff8446);
+    o.insert("color", (int)0xffff8446); // Android ARGB, opaque
     o.insert("allDay", event.allDay());
+    if (event.alertTime().isValid()) {
+        o.insert("reminders", QJsonArray { event.alertTime().toMSecsSinceEpoch() / 1000 });
+    }
     uart->txJson(o);
 
 }

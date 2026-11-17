@@ -156,6 +156,8 @@ public:
     void onFileTransferData(const QByteArray& data);
     void onProtobufMessageReceived(const QByteArray& data);
     void onProtobufStatusMessageReceived(const QByteArray& data);
+    void onFindPhoneRequest();
+    void onFindPhoneCancel();
 
     // return data
     quint32 steps() {return mSteps;};
@@ -188,6 +190,9 @@ signals:
     void informationChanged(Amazfish::Info infoKey, const QString& infoValue);
     void NotificationDataRequested(const NotificationControlMessage& msg);
     void NotificationPerformAction(const NotificationControlMessage& msg);
+    // The watch asked the paired phone to make a sound, or to stop.
+    void findPhoneRequested();
+    void findPhoneCancelled();
     void musicControlCommand(quint8 command);
     void musicControlCapabilitiesRequested();
 
@@ -263,6 +268,7 @@ private:
     bool mIsMlProtocol = false;
     bool mIsReliable = false;
     QTimer* mBatteryTimer = nullptr;
+    bool mBatteryRequestPending = false;
 
     // Flood guard: if a peer ever acknowledges our acknowledgement, drop the
     // repeated frames instead of saturating the link.
@@ -271,6 +277,7 @@ private:
     int m_ackBurst = 0;
     QQueue<QPair<QByteArray, QString>> mSendQueue;
     bool  mSendInProgress = false;
+    int mSendRetries = 0;
 };
 
 #endif //_COMMUNICATOR__H

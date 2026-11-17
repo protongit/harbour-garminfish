@@ -2,6 +2,7 @@
 #include "services/garmin/communicator_v2.h"
 #include "services/garmin/garminfiletransfer.h"
 #include "services/garmin/garminmusiccontrolmessage.h"
+#include "services/garmin/garmintypes.h"
 #include "hrmservice.h"
 #include "deviceinfoservice.h"
 #include "amazfishconfig.h"
@@ -9,7 +10,6 @@
 #include "weather/city.h"
 
 #include <QTimer>
-
 
 #include <QDomDocument>
 #include <QStringList>
@@ -60,6 +60,8 @@ QString GarminDevice::deviceType() const
 
 AbstractFirmwareInfo *GarminDevice::firmwareInfo(const QByteArray &bytes, const QString &path)
 {
+    Q_UNUSED(bytes);
+    Q_UNUSED(path);
     qDebug() << Q_FUNC_INFO;
     return nullptr;
 }
@@ -372,7 +374,7 @@ void GarminDevice::onPropertiesChanged(QString interface, QVariantMap map, QStri
         const bool servicesJustResolved = servicesResolved && list.contains("ServicesResolved");
 
         if (map.contains("Connected")) {
-            bool value = map["Connected"].toBool();
+            const bool value = map["Connected"].toBool();
             CommunicatorV2 *svc = mCommunicator.data();
             if (!value) {
                 setConnectionState("disconnected");
@@ -416,6 +418,16 @@ void GarminDevice::onAnswerCallEvent() {
 
 void GarminDevice::onRejectCallEvent(){
     emit deviceEvent(AbstractDevice::EVENT_DECLINE_CALL);
+}
+
+void GarminDevice::onFindPhoneRequested()
+{
+    emit deviceEvent(AbstractDevice::EVENT_FIND_PHONE);
+}
+
+void GarminDevice::onFindPhoneCancelled()
+{
+    emit deviceEvent(AbstractDevice::EVENT_CANCEL_FIND_PHONE);
 }
 
 QBLEService *GarminDevice::drv_createService(const QString &uuid, const QString &path)
@@ -464,6 +476,11 @@ QBLEService *GarminDevice::drv_createService(const QString &uuid, const QString 
                 this, &GarminDevice::onSyncFinished);
         connect(mFileTransfer, &GarminFileTransfer::syncFailed,
                 this, &GarminDevice::onSyncFailed);
+
+        connect(com.data(), &CommunicatorV2::findPhoneRequested,
+                this, &GarminDevice::onFindPhoneRequested, Qt::UniqueConnection);
+        connect(com.data(), &CommunicatorV2::findPhoneCancelled,
+                this, &GarminDevice::onFindPhoneCancelled, Qt::UniqueConnection);
 
         return com.data();
     }

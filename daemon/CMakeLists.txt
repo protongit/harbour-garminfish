@@ -145,6 +145,7 @@ set(SOURCES
 ./src/services/garmin/datatransferhandler.cpp
 ./src/services/garmin/garminfiletransfer.cpp
 ./src/services/garmin/garminfitparser.cpp
+./src/services/garmin/protobuftools.cpp
 ./src/services/pinetimemusicservice.cpp
 ./src/services/pinetimesimpleweatherservice.cpp
 ./src/services/uartservice.cpp
@@ -300,6 +301,7 @@ set(HEADERS
 ./src/services/garmin/garminstepsmessage.h
 ./src/services/garmin/garminmlr.h
 ./src/services/garmin/datatransferhandler.h
+./src/services/garmin/protobuftools.h
 ./src/services/pinetimemusicservice.h
 ./src/services/pinetimesimpleweatherservice.h
 ./src/services/uartservice.h

@@ -23,7 +23,7 @@ Obsoletes:  harbour-amazfish < 2.9.1
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 
 Summary:    GarminFish watch interface application
-Version:    2.9.0
+Version:    3.0.0
 Release:    1
 Group:      QtQt
 License:    GPLv3

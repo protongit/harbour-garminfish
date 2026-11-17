@@ -1,6 +1,9 @@
 #include "datasource.h"
 #include "amazfish.h"
 #include "fitfileinspector.h"
+
+#include <amazfishconfig.h>
+
 #include <QVariant>
 #include <QTimeZone>
 #include <QDateTime>
@@ -307,7 +310,8 @@ QVariant DataSource::data(const Type type, const QDate &day)
 QList<DataSource::SleepSession> DataSource::calculateSleep(const QDate &day)
 {
     // qDebug() << "Calculating sleep for " << day;
-    QDateTime startDate = QDateTime(day, QTime(12, 00)); //In localtime
+    const QTime dayBoundary(AmazfishConfig::instance()->appSleepDayBoundary(), 0);
+    QDateTime startDate = QDateTime(day, dayBoundary); // In localtime
     QDateTime endDate = startDate.addDays(1);
 
     if (m_conn && m_conn->isDatabaseUsed() && m_conn->containsTable("garmin_sleep") == true) {

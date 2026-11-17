@@ -55,6 +55,44 @@ Instinct 2 Solar** running the GFDI/FIT protocol.
   tries to remove the BlueZ bond; on some systems only the settings UI or root
   can remove it).
 
+### Connection reliability
+
+The daemon keeps the watch connected by itself, so notifications keep arriving
+when the UI is closed.
+
+* The connection is supervised every 5 seconds. BlueZ `Connected` alone is not
+  treated as healthy: a link that does not finish the Garmin handshake in 45
+  seconds is torn down and retried.
+* Retries back off from 5 to 60 seconds and never give up. A user-initiated
+  disconnect or unpair stops them until the next explicit connect.
+* If BlueZ loses the device object (for example after a `bluetoothd` restart or
+  an adapter reset), the daemon runs a short directed LE scan to make BlueZ
+  create it again. Failed scans are retried after five minutes so the radio is
+  not scanning continuously.
+* The Garmin session is rebuilt when BlueZ resolves the services after the link
+  is already up, and the daemon reports `authenticated` on every reconnection.
+  Notification forwarding, music state, calendar and sync are re-armed each
+  time.
+* The watch is marked `Trusted` in BlueZ after pairing.
+* Protocol loops are blocked: a status message with `Ack` status is never
+  acknowledged (answering it used to start an infinite ping-pong), repeated
+  identical frames are dropped, and repeated notification subscription requests
+  are answered at most once every two seconds.
+
+The daemon keeps a small rotating log in
+`~/.local/share/harbour-garminfish/harbour-garminfish/garminfish-daemon.log`.
+By default it stores warnings and connection state changes. For a full protocol
+trace, create the marker file and restart the service:
+
+```sh
+mkdir -p ~/.local/share/harbour-garminfish/harbour-garminfish
+touch ~/.local/share/harbour-garminfish/harbour-garminfish/debug-log
+systemctl --user restart harbour-garminfish
+rm ~/.local/share/harbour-garminfish/harbour-garminfish/debug-log   # back to normal
+```
+
+The application version is shown in **Settings > Application Settings > About**.
+
 ## Submodules and vendored code
 
 * `qble` and `daemon/Qt-AES` remain submodules pointing at their upstream
@@ -101,6 +139,9 @@ them):
 
 ```sh
 systemctl --user restart harbour-garminfish
+# confirm the process is running the version you just installed
+grep "Starting harbour-garminfishd" \
+  ~/.local/share/harbour-garminfish/harbour-garminfish/garminfish-daemon.log | tail -1
 # close and reopen harbour-garminfish-ui
 ```
 

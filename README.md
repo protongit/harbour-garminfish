@@ -44,6 +44,10 @@ GFDI/FIT protocol may work but are not validated.
 * Calls: incoming call notification with accept/decline actions.
 * Pairing: recovers when the watch is already bonded in BlueZ but the app lost
   its own configuration, plus a "Forget" action in the pairing list.
+* Connection: the background service supervises the link, reconnects on its own
+  after drops, walks the user through BlueZ losing the device object, and
+  re-arms notifications after every reconnection. See "Connection reliability"
+  in [FORK.md](FORK.md).
 
 ## Installation (Sailfish OS)
 

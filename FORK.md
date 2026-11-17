@@ -13,6 +13,11 @@ Upstream is the place to go for general Amazfish support, releases and issues:
 The work in this fork is focused on Garmin support, tested on a **Garmin
 Instinct 2 Solar** running the GFDI/FIT protocol.
 
+The tree is based on **upstream Amazfish 3.0.0** (`master` keeps upstream merged
+in). Garmin work that upstream has since added (Find My Phone, sleep charts)
+is available too; the phone music implementation of this fork is kept because
+it also sends the playback position.
+
 ### FIT import
 
 * Activities: sessions, laps, records, developer fields, GPX export and a FIT

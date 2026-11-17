@@ -42,6 +42,8 @@ GFDI/FIT protocol may work but are not validated.
 * Phone music control: track title/artist/album, play/pause, next/previous,
   volume up/down and playback position (timeline and elapsed time).
 * Calls: incoming call notification with accept/decline actions.
+* Find my phone: the watch can ring the phone and stop it again.
+* Sleep charts: day boundary setting for how sleep is assigned to a day.
 * Pairing: recovers when the watch is already bonded in BlueZ but the app lost
   its own configuration, plus a "Forget" action in the pairing list.
 * Connection: the background service supervises the link, reconnects on its own

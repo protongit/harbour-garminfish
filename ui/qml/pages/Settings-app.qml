@@ -167,6 +167,32 @@ PagePL {
         }
 
         SectionHeaderPL {
+            text: qsTr("About")
+        }
+
+        LabelPL {
+            text: qsTr("GarminFish version %1").arg(APP_VERSION)
+            font.pixelSize: styler.themeFontSizeSmall
+            color: styler.themeSecondaryHighlightColor
+            wrapMode: Text.Wrap
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: styler.themePaddingMedium
+            anchors.rightMargin: styler.themePaddingMedium
+        }
+
+        LabelPL {
+            text: qsTr("Fork of Amazfish with Garmin support. Licensed under GPLv3.")
+            font.pixelSize: styler.themeFontSizeSmall
+            color: styler.themeSecondaryHighlightColor
+            wrapMode: Text.Wrap
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: styler.themePaddingMedium
+            anchors.rightMargin: styler.themePaddingMedium
+        }
+
+        SectionHeaderPL {
         }
 
         ButtonPL {

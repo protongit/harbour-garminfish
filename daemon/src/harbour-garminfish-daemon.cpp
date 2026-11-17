@@ -14,8 +14,11 @@
 #include <QDBusConnection>
 #include <QDBusError>
 #include <QDBusInterface>
+#include <QDateTime>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 
 #include "deviceinterface.h"
 #include "devicefactory.h"
@@ -24,15 +27,90 @@
 static void daemonize();
 static void signalHandler(int sig);
 
+// The user session journal is not readable by defaultuser on Sailfish, so keep
+// a small rotating log next to the application data. It is what makes it
+// possible to diagnose why a watch connection was lost.
+static QFile *logFile = nullptr;
+static qint64 logBytes = 0;
+static const qint64 LOG_FILE_MAX_BYTES = 2 * 1024 * 1024;
+
+// The daemon logs every BLE packet, which is far too much for a phone that
+// runs for days. Keep only warnings and connection milestones by default;
+// create ~/.local/share/harbour-garminfish/harbour-garminfish/debug-log and
+// restart the service to get the full protocol trace back.
+static bool verboseLogging()
+{
+    static int cached = -1;
+    if (cached < 0) {
+        const QString marker = QDir::homePath()
+                + QStringLiteral("/.local/share/harbour-garminfish/harbour-garminfish/debug-log");
+        cached = QFile::exists(marker) ? 1 : 0;
+    }
+    return cached == 1;
+}
+
+static void appendToLogFile(const QByteArray &line)
+{
+    if (!logFile) {
+        const QString dir = QDir::homePath()
+                + QStringLiteral("/.local/share/harbour-garminfish/harbour-garminfish");
+        if (!QDir().mkpath(dir)) {
+            return;
+        }
+        const QString path = dir + QStringLiteral("/garminfish-daemon.log");
+        const QFileInfo info(path);
+        if (info.exists() && info.size() > LOG_FILE_MAX_BYTES) {
+            QFile::remove(path + QStringLiteral(".1"));
+            QFile::rename(path, path + QStringLiteral(".1"));
+        }
+        logFile = new QFile(path);
+        if (!logFile->open(QIODevice::WriteOnly | QIODevice::Append)) {
+            delete logFile;
+            logFile = nullptr;
+            return;
+        }
+        logBytes = logFile->size();
+    }
+
+    logFile->write(line);
+    logFile->flush();
+    logBytes += line.size();
+
+    // Rotate while running too: the daemon can stay up for days and the log
+    // is deliberately verbose.
+    if (logBytes > LOG_FILE_MAX_BYTES) {
+        const QString path = logFile->fileName();
+        logFile->close();
+        delete logFile;
+        logFile = nullptr;
+        logBytes = 0;
+        QFile::remove(path + QStringLiteral(".1"));
+        QFile::rename(path, path + QStringLiteral(".1"));
+    }
+}
+
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+    Q_UNUSED(type)
+
     QByteArray localMsg = msg.toLocal8Bit();
-    const char* time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz").toLocal8Bit();
+    const QByteArray time = QDateTime::currentDateTime()
+            .toString("yyyy-MM-dd hh:mm:ss.zzz").toLocal8Bit();
+    QByteArray line;
 #ifdef QT_MESSAGELOGCONTEXT
-    fprintf(stderr,"%s %s:%d: %s\n", time, context.file, context.line, localMsg.constData());
+    line = time + " " + QByteArray(context.file) + ":" + QByteArray::number(context.line)
+            + ": " + localMsg + "\n";
 #else
-    fprintf(stderr, "%s : %s\n", time, localMsg.constData());
+    line = time + " : " + localMsg + "\n";
 #endif
+    fputs(line.constData(), stderr);
+
+    const bool important = type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg
+            || msg.contains(QStringLiteral("Connection state:"))
+            || msg.startsWith(QStringLiteral("GarminFish:"));
+    if (important || verboseLogging()) {
+        appendToLogFile(line);
+    }
 }
 
 int main(int argc, char **argv)

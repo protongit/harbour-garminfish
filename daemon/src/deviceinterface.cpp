@@ -11,6 +11,8 @@
 #include <QProcess>
 #include <QStandardPaths>
 #include <QDBusInterface>
+#include <QDBusMessage>
+#include <QDBusVariant>
 
 #include <KDb3/KDbDriverManager>
 #include <KDb3/KDbTransactionGuard>
@@ -38,16 +40,8 @@ DeviceInterface::DeviceInterface()
 
     //Create a device object
     m_device = DeviceFactory::createDevice(config->pairedName(), config->pairedType());
-    if (m_device) {
-        connect(m_device, &AbstractDevice::connectionStateChanged, this, &DeviceInterface::onConnectionStateChanged, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::message, this, &DeviceInterface::message, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::downloadProgress, this, &DeviceInterface::downloadProgress, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::operationRunningChanged, this, &DeviceInterface::operationRunningChanged, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::buttonPressed, this, &DeviceInterface::handleButtonPressed, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::informationChanged, this, &DeviceInterface::slot_informationChanged, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::deviceEvent, this, &DeviceInterface::deviceEvent, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::weatherRequested, this, &DeviceInterface::sendCurrentWeather, Qt::UniqueConnection);
-    }
+    wireDevice(m_device);
+    m_stateSince = QDateTime::currentDateTime();
 
     //Create the DBUS HRM Interface
     m_dbusHRM = new DBusHRM(this);
@@ -98,9 +92,9 @@ DeviceInterface::DeviceInterface()
     connect(&m_navigationInterface, &NavigationInterface::navigationChanged, this, &DeviceInterface::navigationChanged);
 
     m_reconnectTimer = new QTimer(this);
-    m_reconnectTimer->setInterval(60000);
+    m_reconnectTimer->setInterval(5000);
     connect(m_reconnectTimer, &QTimer::timeout, this, &DeviceInterface::reconnectionTimer);
-    m_reconnectTimer->start(); // Start timer to attempt to reconnect every 60 seconds
+    m_reconnectTimer->start(); // Supervise the connection every 5 seconds
 
     reconnectionTimer();
 }
@@ -114,11 +108,30 @@ void DeviceInterface::connectToDevice(const QString &address)
 {
     qDebug() << Q_FUNC_INFO << ": address:" << address;
 
+    if (!m_device) {
+        adoptConfiguredDevice();
+    }
+
     m_deviceAddress = devicePath(address);
 
     if (m_device && !m_deviceAddress.isEmpty()) {
+        stopDiscoveryFallback();
         m_device->setDevicePath(m_deviceAddress);
+        setTrusted(address);
         m_device->connectToDevice();
+    } else if (m_device && m_autoreconnect) {
+        // BlueZ does not expose the device object any more (bluetoothd was
+        // restarted, the adapter was reset or the device was pruned). A scan
+        // is the only way to make BlueZ create the object again, so start one
+        // instead of waiting for the user to pair the watch again.
+        qDebug() << Q_FUNC_INFO << ": device object missing, starting discovery";
+        if (!m_discoveryActive) {
+            startDiscoveryFallback();
+        }
+        if (m_allowDeviceNotAvailableMessage) {
+            message(tr("Searching for the watch..."));
+            m_allowDeviceNotAvailableMessage = false;
+        }
     } else {
         qDebug() << Q_FUNC_INFO << ": device was not valid";
         if (m_allowDeviceNotAvailableMessage) {
@@ -150,26 +163,286 @@ void DeviceInterface::connectToDevice(bool userInitiated)
     }
 
     if (!pairedAddress.isEmpty()) {
-        // Connect was called from UI so enable auto reconnect
+        // Connect was called from UI so enable auto reconnect and retry at once
         m_autoreconnect = true;
+        m_disconnectRequested = false;
+        m_reconnectAttempt = 0;
+        m_nextReconnectAttempt = QDateTime();
+        m_nextDiscoveryAt = QDateTime();
         connectToDevice(pairedAddress);
+    }
+}
+
+int DeviceInterface::reconnectDelayMs() const
+{
+    switch (m_reconnectAttempt) {
+    case 0:  return 5000;
+    case 1:  return 10000;
+    case 2:  return 20000;
+    case 3:  return 40000;
+    default: return 60000;
     }
 }
 
 void DeviceInterface::reconnectionTimer()
 {
-    qDebug() << Q_FUNC_INFO;
-
-    const QString state = connectionState();
-    if (state == "pairing" || state == "connecting" || state == "connected" || state == "paired") {
+    if (!m_autoreconnect || m_disconnectRequested) {
+        if (m_discoveryActive) {
+            stopDiscoveryFallback();
+        }
         return;
     }
 
-    if ((state != "authenticated" && m_autoreconnect) || state == "authfailed") {
-        qDebug() << Q_FUNC_INFO << "Lost connection";
-        disconnect();
-        connectToDevice(false);
+    const QString address = AmazfishConfig::instance()->pairedAddress();
+    if (address.isEmpty()) {
+        if (m_discoveryActive) {
+            stopDiscoveryFallback();
+        }
+        return;
     }
+
+    if (!m_device) {
+        adoptConfiguredDevice();
+    }
+    if (!m_device) {
+        return;
+    }
+
+    const QString state = connectionState();
+    const QDateTime now = QDateTime::currentDateTime();
+
+    if (state == "authenticated") {
+        m_reconnectAttempt = 0;
+        m_nextReconnectAttempt = QDateTime();
+        m_nextDiscoveryAt = QDateTime();
+        if (m_discoveryActive) {
+            stopDiscoveryFallback();
+        }
+        return;
+    }
+
+    // Give BlueZ and the device time to complete a genuine connection. The
+    // Garmin session is only healthy once it is "authenticated"; "connected"
+    // means BlueZ has a link but the Garmin handshake has not finished (or
+    // has silently died), so it must not block recovery for ever.
+    const int graceMs = (state == "pairing") ? 120000 : 45000;
+    if ((state == "pairing" || state == "connecting" || state == "connected" || state == "paired")
+            && m_stateSince.isValid() && m_stateSince.msecsTo(now) < graceMs) {
+        return;
+    }
+
+    if (m_nextReconnectAttempt.isValid() && now < m_nextReconnectAttempt) {
+        return;
+    }
+
+    // While a fallback scan is running, wait for the device object to appear
+    // (or for the scan deadline to expire) before retrying the connection.
+    if (m_discoveryActive) {
+        m_deviceAddress = devicePath(address);
+        if (!m_deviceAddress.isEmpty()) {
+            qDebug() << Q_FUNC_INFO << "watch found during discovery:" << m_deviceAddress;
+            stopDiscoveryFallback();
+            attemptReconnect();
+            return;
+        }
+        if (now >= m_discoveryDeadline) {
+            qDebug() << Q_FUNC_INFO << "discovery timed out, will retry later";
+            stopDiscoveryFallback();
+            // A paired watch is normally known to BlueZ, so a missing object
+            // is rare. Do not keep the radio scanning continuously: retry the
+            // scan every five minutes until bluetoothd brings it back.
+            m_nextDiscoveryAt = now.addSecs(300);
+            m_reconnectAttempt++;
+            m_nextReconnectAttempt = now.addMSecs(reconnectDelayMs());
+        }
+        return;
+    }
+
+    attemptReconnect();
+}
+
+void DeviceInterface::attemptReconnect()
+{
+    auto config = AmazfishConfig::instance();
+    const QString address = config->pairedAddress();
+    if (address.isEmpty() || !m_device) {
+        return;
+    }
+
+    const QString state = connectionState();
+    const QDateTime now = QDateTime::currentDateTime();
+
+    // A half-open link (BlueZ says connected but the Garmin session never
+    // authenticated) must be torn down before a new Connect can do anything.
+    if (state == "connected" || state == "connecting" || state == "paired") {
+        qWarning() << "GarminFish: link is" << state << "without a Garmin session, resetting it";
+        m_device->disconnectFromDevice();
+        m_stateSince = now;
+        m_nextReconnectAttempt = now.addMSecs(3000);
+        return;
+    }
+
+    m_deviceAddress = devicePath(address);
+    if (m_deviceAddress.isEmpty()) {
+        m_reconnectAttempt++;
+        m_nextReconnectAttempt = now.addMSecs(reconnectDelayMs());
+        qDebug() << "GarminFish: BlueZ has no device object for" << address << ", starting discovery";
+        if (!m_discoveryActive
+                && (!m_nextDiscoveryAt.isValid() || now >= m_nextDiscoveryAt)) {
+            startDiscoveryFallback();
+        }
+        return;
+    }
+
+    qDebug() << "GarminFish: reconnect attempt" << (m_reconnectAttempt + 1)
+             << "for" << address << "at" << m_deviceAddress;
+    m_device->setDevicePath(m_deviceAddress);
+    setTrusted(address);
+    m_device->connectToDevice();
+
+    m_reconnectAttempt++;
+    m_nextReconnectAttempt = now.addMSecs(reconnectDelayMs());
+}
+
+void DeviceInterface::startDiscoveryFallback()
+{
+    const QString address = AmazfishConfig::instance()->pairedAddress();
+    if (address.isEmpty()) {
+        return;
+    }
+
+    AdapterModel adapterModel;
+    if (adapterModel.rowCount() == 0) {
+        qDebug() << Q_FUNC_INFO << ": no Bluetooth adapters available";
+        return;
+    }
+
+    QVariantMap chosen;
+    const QString preferred = AmazfishConfig::instance()->localAdapter();
+    for (int i = 0; i < adapterModel.rowCount(); ++i) {
+        QVariantMap adapter = adapterModel.get(i);
+        const QString path = adapter["itemText"].toString();
+        if (path.isEmpty()) {
+            continue;
+        }
+        if (chosen.isEmpty() || path == preferred) {
+            chosen = adapter;
+        }
+        if (path == preferred) {
+            break;
+        }
+    }
+    if (chosen.isEmpty()) {
+        return;
+    }
+
+    m_discoveryActive = true;
+    m_discoveryAdapterPath = chosen["itemText"].toString();
+    m_discoveryDeadline = QDateTime::currentDateTime().addSecs(30);
+
+    qDebug() << "GarminFish: scanning on" << m_discoveryAdapterPath << "for" << address;
+
+    // A LE-only scan with duplicate data is much cheaper than a full inquiry
+    // and is enough to make BlueZ create the device object again.
+    QDBusInterface adapterIface("org.bluez", m_discoveryAdapterPath,
+                                "org.bluez.Adapter1", QDBusConnection::systemBus());
+    // BlueZ refuses to change the filter while a discovery is running.
+    adapterIface.call("StopDiscovery");
+    QVariantMap filter;
+    filter["Transport"] = QStringLiteral("le");
+    filter["DuplicateData"] = true;
+    QDBusMessage filterReply = adapterIface.call("SetDiscoveryFilter", filter);
+    if (filterReply.type() == QDBusMessage::ErrorMessage) {
+        qDebug() << Q_FUNC_INFO << ": SetDiscoveryFilter:" << filterReply.errorMessage();
+    }
+    QDBusMessage startReply = adapterIface.call("StartDiscovery");
+    if (startReply.type() == QDBusMessage::ErrorMessage) {
+        qDebug() << Q_FUNC_INFO << ": StartDiscovery:" << startReply.errorMessage();
+        m_discoveryActive = false;
+    }
+}
+
+void DeviceInterface::stopDiscoveryFallback()
+{
+    if (!m_discoveryActive) {
+        return;
+    }
+
+    m_discoveryActive = false;
+    m_discoveryDeadline = QDateTime();
+
+    if (m_discoveryAdapterPath.isEmpty()) {
+        return;
+    }
+
+    qDebug() << "GarminFish: stopping discovery on" << m_discoveryAdapterPath;
+    QDBusInterface adapterIface("org.bluez", m_discoveryAdapterPath,
+                                "org.bluez.Adapter1", QDBusConnection::systemBus());
+    QDBusMessage reply = adapterIface.call("StopDiscovery");
+    if (reply.type() == QDBusMessage::ErrorMessage) {
+        qDebug() << Q_FUNC_INFO << ": StopDiscovery:" << reply.errorMessage();
+    }
+}
+
+void DeviceInterface::setTrusted(const QString &address)
+{
+    const QString path = m_deviceAddress.isEmpty() ? devicePath(address) : m_deviceAddress;
+    if (path.isEmpty()) {
+        return;
+    }
+
+    QDBusInterface properties("org.bluez", path,
+                              "org.freedesktop.DBus.Properties",
+                              QDBusConnection::systemBus());
+    if (!properties.isValid()) {
+        return;
+    }
+
+    // Keep BlueZ willing to accept the watch when it reconnects on its own.
+    QDBusMessage reply = properties.call("Set", "org.bluez.Device1", "Trusted",
+                                         QVariant::fromValue(QDBusVariant(true)));
+    if (reply.type() == QDBusMessage::ErrorMessage) {
+        qDebug() << Q_FUNC_INFO << ": setting Trusted failed:" << reply.errorMessage();
+    }
+}
+
+void DeviceInterface::wireDevice(AbstractDevice *device)
+{
+    if (!device) {
+        return;
+    }
+
+    connect(device, &AbstractDevice::connectionStateChanged, this, &DeviceInterface::onConnectionStateChanged, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::message, this, &DeviceInterface::message, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::downloadProgress, this, &DeviceInterface::downloadProgress, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::operationRunningChanged, this, &DeviceInterface::operationRunningChanged, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::buttonPressed, this, &DeviceInterface::handleButtonPressed, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::informationChanged, this, &DeviceInterface::slot_informationChanged, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::deviceEvent, this, &DeviceInterface::deviceEvent, Qt::UniqueConnection);
+    connect(device, &AbstractDevice::weatherRequested, this, &DeviceInterface::sendCurrentWeather, Qt::UniqueConnection);
+}
+
+void DeviceInterface::adoptConfiguredDevice()
+{
+    if (m_device) {
+        return;
+    }
+
+    auto config = AmazfishConfig::instance();
+    if (config->pairedName().isEmpty() && config->pairedType().isEmpty()) {
+        return;
+    }
+
+    m_device = DeviceFactory::createDevice(config->pairedName(), config->pairedType());
+    if (!m_device) {
+        qWarning() << "GarminFish: could not create a device for"
+                   << config->pairedName() << config->pairedType();
+        return;
+    }
+
+    qDebug() << "GarminFish: recreated device object for" << config->pairedName();
+    wireDevice(m_device);
+    m_stateSince = QDateTime::currentDateTime();
 }
 
 QString DeviceInterface::pair(const QString &name, const QString &deviceType, const QString &address)
@@ -191,14 +464,13 @@ QString DeviceInterface::pair(const QString &name, const QString &deviceType, co
 
     if (m_device) {
         m_device->setDevicePath(m_deviceAddress);
-        connect(m_device, &AbstractDevice::connectionStateChanged, this, &DeviceInterface::onConnectionStateChanged, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::message, this, &DeviceInterface::message, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::downloadProgress, this, &DeviceInterface::downloadProgress, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::operationRunningChanged, this, &DeviceInterface::operationRunningChanged, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::buttonPressed, this, &DeviceInterface::handleButtonPressed, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::informationChanged, this, &DeviceInterface::slot_informationChanged, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::deviceEvent, this, &DeviceInterface::deviceEvent, Qt::UniqueConnection);
-        connect(m_device, &AbstractDevice::weatherRequested, this, &DeviceInterface::sendCurrentWeather, Qt::UniqueConnection);
+        wireDevice(m_device);
+
+        m_autoreconnect = true;
+        m_disconnectRequested = false;
+        m_reconnectAttempt = 0;
+        m_nextReconnectAttempt = QDateTime();
+        m_stateSince = QDateTime::currentDateTime();
 
         if (bluezDevicePaired(address)) {
             // BlueZ still has the bond (for example when the app lost its own
@@ -209,13 +481,12 @@ QString DeviceInterface::pair(const QString &name, const QString &deviceType, co
             config->setPairedName(name);
             config->setPairedType(deviceType);
             config->setPairedAddress(address);
-            m_autoreconnect = true;
+            setTrusted(address);
             m_device->connectToDevice();
             return "paired";
         }
 
         m_device->pair();
-        m_autoreconnect = true;
         return "pairing";
     }
 
@@ -228,6 +499,8 @@ void DeviceInterface::disconnect()
 {
     qDebug() << Q_FUNC_INFO;
     m_autoreconnect = false;
+    m_disconnectRequested = true;
+    stopDiscoveryFallback();
 
     if (m_device) {
         m_device->disconnectFromDevice();
@@ -266,6 +539,8 @@ void DeviceInterface::unpairDevice(const QString &address)
         m_device = nullptr;
     }
     m_autoreconnect = false;
+    m_disconnectRequested = true;
+    stopDiscoveryFallback();
 
     auto config = AmazfishConfig::instance();
     if (target.isEmpty()
@@ -773,9 +1048,13 @@ KDbConnection *DeviceInterface::dbConnection()
 void DeviceInterface::onConnectionStateChanged()
 {
     qDebug() << Q_FUNC_INFO << connectionState();
+    m_stateSince = QDateTime::currentDateTime();
 
     if (m_device) {
         if (connectionState() == "authenticated") {
+            m_reconnectAttempt = 0;
+            m_nextReconnectAttempt = QDateTime();
+            stopDiscoveryFallback();
             m_device->setDatabase(dbConnection());
             m_dbusHRM->setDevice(m_device);
 

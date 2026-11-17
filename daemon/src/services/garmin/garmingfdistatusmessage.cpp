@@ -168,15 +168,26 @@ void GarminGfdiStatusMessage::parse(const QByteArray& data)
         */
     default:
         //all message types not handled above should only be ACK requests and should not be Acked
-        Status status= static_cast<Status>(data[2]);
-        if (status == Status::Ack)
-        {
-            qDebug() << Q_FUNC_INFO << "Garmin: Got ack for message type " << messageIdToString(originalMessageType).value() << ", not acking the ack.";
-        }
-        else {
-            qDebug() << Q_FUNC_INFO << "Garmin: Got unexpected result for message type " << originalMessageType << "," << messageIdToString(originalMessageType).value() << ": " << statusName(status);
+        if (data.size() > 2) {
+            Status status= static_cast<Status>(data[2]);
+            if (status == Status::Ack)
+            {
+                qDebug() << Q_FUNC_INFO << "Garmin: Got ack for message type " << messageIdToString(originalMessageType).value() << ", not acking the ack.";
+            }
+            else {
+                qDebug() << Q_FUNC_INFO << "Garmin: Got unexpected result for message type " << originalMessageType << "," << messageIdToString(originalMessageType).value() << ": " << statusName(status);
+            }
         }
     }
+
+    // A status message carrying the Ack status must never be acknowledged.
+    // The watch would treat our ack as a new message, ack it back, and the two
+    // devices would ping-pong for ever, saturating the link and starving the
+    // daemon event loop (which looks like a frozen/duplicated connection).
+    if (data.size() > 2 && static_cast<Status>(data.at(2)) == Status::Ack) {
+        handled = true;
+    }
+
     if (!handled) {
         //send generic Ack
         QByteArray resp = GfdiMessageGenerator::ackResponse(originalMessageType);

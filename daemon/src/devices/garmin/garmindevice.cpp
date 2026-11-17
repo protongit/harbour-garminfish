@@ -368,9 +368,9 @@ void GarminDevice::onPropertiesChanged(QString interface, QVariantMap map, QStri
     qDebug() << Q_FUNC_INFO << interface << map << list;
 
     if (interface == "org.bluez.Device1") {
-        if (deviceProperty("ServicesResolved").toBool() ) {
-            initialise();
-            }
+        const bool servicesResolved = deviceProperty("ServicesResolved").toBool();
+        const bool servicesJustResolved = servicesResolved && list.contains("ServicesResolved");
+
         if (map.contains("Connected")) {
             bool value = map["Connected"].toBool();
             CommunicatorV2 *svc = mCommunicator.data();
@@ -387,8 +387,26 @@ void GarminDevice::onPropertiesChanged(QString interface, QVariantMap map, QStri
                 {
                     qDebug() << Q_FUNC_INFO << "Garmin: Communicator already exists, sending connect";
                     svc->onConnectionStateChange(true);
+                } else if (servicesResolved) {
+                    // Reconnection: BlueZ does not always repeat the
+                    // ServicesResolved notification, so build the Garmin
+                    // session here or the handshake would never restart.
+                    initialise();
                 }
             }
+        } else if (servicesJustResolved) {
+            // BlueZ can report the link as connected before it has resolved
+            // the GATT services. The first handshake attempt then finds no
+            // characteristics and the session would stay half open.
+            if (mCommunicator) {
+                if (!mCommunicator->handshakeComplete()) {
+                    mCommunicator->restartSession();
+                }
+            } else {
+                initialise();
+            }
+        } else if (servicesResolved) {
+            initialise();
         }
     }
 }
@@ -418,6 +436,7 @@ QBLEService *GarminDevice::drv_createService(const QString &uuid, const QString 
             mNotificationHandler = QSharedPointer<GarminNotificationHandler>::create(mCommunicator);
         connect(com.data(), &CommunicatorV2::NotificationDataRequested, mNotificationHandler.data(), &GarminNotificationHandler::onNotificationDataRequested);
         connect(com.data(), &CommunicatorV2::NotificationPerformAction, mNotificationHandler.data(), &GarminNotificationHandler::onNotificationPerformAction);
+        connect(com.data(), &CommunicatorV2::sessionReady, this, &GarminDevice::onSessionReady, Qt::UniqueConnection);
         connect(mNotificationHandler.data(), &GarminNotificationHandler::acceptIncomingCall, this, &GarminDevice::onAnswerCallEvent);
         connect(mNotificationHandler.data(), &GarminNotificationHandler::rejectIncomingCall, this, &GarminDevice::onRejectCallEvent);
 
@@ -446,7 +465,6 @@ QBLEService *GarminDevice::drv_createService(const QString &uuid, const QString 
         connect(mFileTransfer, &GarminFileTransfer::syncFailed,
                 this, &GarminDevice::onSyncFailed);
 
-        setConnectionState("authenticated");
         return com.data();
     }
     // if we are here, no Garmin device was detected or serice already created
@@ -588,5 +606,17 @@ void GarminDevice::authenticated(bool ready)
         setConnectionState("authenticated");
     } else {
         setConnectionState("authfailed");
+    }
+}
+
+void GarminDevice::onSessionReady()
+{
+    // The GFDI handshake has completed (again). Marking the session as
+    // authenticated here, instead of only when the communicator is created,
+    // is what makes reconnections fully usable: notifications, music state,
+    // DB and calendar are only re-armed on this state change.
+    qDebug() << Q_FUNC_INFO;
+    if (connectionState() != "authenticated") {
+        setConnectionState("authenticated");
     }
 }

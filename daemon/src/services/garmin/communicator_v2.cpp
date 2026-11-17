@@ -92,6 +92,20 @@ void CommunicatorV2::onDeviceMaxPacketSize(quint16 deviceMaxPacketSize) {
 bool CommunicatorV2::initializeDevice() {
     qDebug() <<Q_FUNC_INFO << "Garmin: initalizing device";
 
+    // Drop the objects of a previous session before creating new ones. Every
+    // QBLECharacteristic subscribes to BlueZ, so keeping them alive would make
+    // each incoming packet be handled once per stale object (and answered once
+    // per stale object too, which the watch sees as duplicate replies).
+    if (mState->characteristicReceive) {
+        disconnect(mState->characteristicReceive.data(), nullptr, this, nullptr);
+        mState->characteristicReceive->stopNotify();
+        mState->characteristicReceive.clear(); // the shared pointer owns the object
+    }
+    if (mState->characteristicSend) {
+        disconnect(mState->characteristicSend.data(), nullptr, this, nullptr);
+        mState->characteristicSend.clear();
+    }
+
     QMap<QString, QSharedPointer<QBLECharacteristic>> characteristicMap;
 
 
@@ -169,8 +183,11 @@ bool CommunicatorV2::initializeDevice() {
     if ((mState->characteristicSend != NULL) && (mState->characteristicReceive  != NULL)) {
         qDebug() << Q_FUNC_INFO << "Garmin: Characteristic found. Send " << mState->UUIDSend << ", Receive " << mState->UUIDReceive;
         enableNotification(mState->UUIDReceive);
-        connect(this,&QBLEService::characteristicChanged,this,&CommunicatorV2::onCharacteristicChanged);
-        connect(mState->characteristicReceive.data(),&QBLECharacteristic::characteristicRead,this,&CommunicatorV2::onCharacteristicChanged);
+        // Incoming data is delivered through the service's characteristicChanged
+        // signal (the same object on which notifications are enabled). Do not
+        // also connect the private characteristic object: it would make every
+        // packet be handled twice and answered twice.
+        connect(this,&QBLEService::characteristicChanged,this,&CommunicatorV2::onCharacteristicChanged,Qt::UniqueConnection);
         if (mIsMlProtocol) {
             const QByteArray closeAll = createCloseAllServicesMessage();
             // write async to avoid timing issues on reconnect
@@ -223,6 +240,23 @@ void CommunicatorV2::processSendQueue()
 }
 
 bool CommunicatorV2::sendMessage(const QString& taskName, const QByteArray& message) {
+    // Flood guard: never let a protocol loop (for example, acknowledging an
+    // acknowledgement) saturate the BLE link and block the daemon event loop.
+    if (taskName.endsWith(QStringLiteral("ACK"))) {
+        const QDateTime now = QDateTime::currentDateTime();
+        if (message == m_lastAckPayload && m_ackBurstSince.isValid()
+                && m_ackBurstSince.msecsTo(now) < 2000) {
+            if (++m_ackBurst > 20) {
+                qWarning() << "Garmin: dropping repeated" << taskName << "(possible ack loop)";
+                return false;
+            }
+        } else {
+            m_lastAckPayload = message;
+            m_ackBurstSince = now;
+            m_ackBurst = 0;
+        }
+    }
+
     qDebug() <<Q_FUNC_INFO << "Garmin: Send Message " << taskName << " Content " << message.toHex();
 
     const QByteArray framed = CobsCoDec::encode(message);
@@ -833,6 +867,7 @@ bool CommunicatorV2::completePairing() {
     }
     qDebug()<< Q_FUNC_INFO << "Garmin: First connection already done";
 
+    emit sessionReady();
     return true;
 }
 
@@ -860,10 +895,15 @@ void CommunicatorV2::registerServices() {
     //registerService(Service::RealtimeHrv, true);
 
     // Send Battery Status request
-    mBatteryTimer = new QTimer(this);
-    mBatteryTimer->setInterval(120000);
+    // Keep a single timer: initializeDevice() runs again on every
+    // reconnection, and creating a new timer each time would multiply the
+    // battery requests.
+    if (!mBatteryTimer) {
+        mBatteryTimer = new QTimer(this);
+        mBatteryTimer->setInterval(120000);
+        connect(mBatteryTimer,&QTimer::timeout, this, &CommunicatorV2::getBatteryLevel);
+    }
     mBatteryTimer->start();
-    connect(mBatteryTimer,&QTimer::timeout, this, &CommunicatorV2::getBatteryLevel);
     getBatteryLevel();
     mServicesResolved=true;
 }
@@ -879,10 +919,13 @@ void CommunicatorV2::dispose() {
     if (mState->characteristicReceive) {
         mState->characteristicReceive->stopNotify();
         disconnect(mState->characteristicReceive.data(),nullptr,this,nullptr);
+        mState->characteristicReceive.clear(); // the shared pointer owns the object
     }
 
-    mState->characteristicSend->deleteLater();
-    mState->characteristicReceive->deleteLater();
+    if (mState->characteristicSend) {
+        disconnect(mState->characteristicSend.data(),nullptr,this,nullptr);
+        mState->characteristicSend.clear();
+    }
     //m_gfdiService.reset();
     mState->cobsCodec->reset();
     mIsMlProtocol = false;
@@ -911,9 +954,16 @@ void CommunicatorV2::onConnectionStateChange(bool connected) {
         dispose();
     }
     mConnected=connected;
-
 }
 
+void CommunicatorV2::restartSession() {
+    qDebug() << Q_FUNC_INFO << "Garmin: rebuilding session";
+    dispose();
+    mConnected = false;
+    if (initializeDevice()) {
+        mConnected = true;
+    }
+}
 
 QByteArray CommunicatorV2::createCloseAllServicesMessage() const {
     QByteArray b;

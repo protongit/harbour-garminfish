@@ -37,6 +37,7 @@ public:
 
     AbstractFirmwareInfo *firmwareInfo(const QByteArray &bytes, const QString &path) override;
     Q_SLOT void authenticated(bool ready);
+    Q_SLOT void onSessionReady();
 
     void fetchData(Amazfish::DataTypes dataTypes) override;
     void fetchFullData(Amazfish::DataTypes dataTypes) override;

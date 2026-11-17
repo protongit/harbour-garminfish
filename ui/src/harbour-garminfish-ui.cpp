@@ -137,6 +137,12 @@ int main(int argc, char *argv[])
     view->rootContext()->setContextProperty("ENABLE_SYSTEMD", "YES");
 #endif
 
+#ifdef PROJECT_GIT_VERSION
+    view->rootContext()->setContextProperty("APP_VERSION", QStringLiteral(PROJECT_GIT_VERSION));
+#else
+    view->rootContext()->setContextProperty("APP_VERSION", QStringLiteral("unknown"));
+#endif
+
 #ifdef MER_EDITION_SAILFISH
     view->setSource(QUrl("qrc:/qml/harbour-garminfish.qml"));
     view->show();

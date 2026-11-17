@@ -4,6 +4,7 @@
 
 #include <QObject>
 #include <QtSql/QtSql>
+#include <QDateTime>
 #include <QQueue>
 #include <QTimer>
 
@@ -114,9 +115,31 @@ private:
     QTimer *m_reconnectTimer = nullptr;
     QTimer *m_musicPositionTimer = nullptr;
     bool m_autoreconnect = true;
+    bool m_disconnectRequested = false;
     bool m_allowDeviceNotAvailableMessage = true;
 
+    // Connection supervision. BlueZ reports "Connected" before the Garmin
+    // session is authenticated, so a live link is only trusted once the
+    // device reaches the "authenticated" state.
+    QDateTime m_stateSince;
+    int m_reconnectAttempt = 0;
+    QDateTime m_nextReconnectAttempt;
+
+    // Discovery fallback used when BlueZ no longer exposes the device object
+    // (bluetoothd restart, adapter reset, device pruned).
+    bool m_discoveryActive = false;
+    QString m_discoveryAdapterPath;
+    QDateTime m_discoveryDeadline;
+    QDateTime m_nextDiscoveryAt;
+
+    void wireDevice(AbstractDevice *device);
+    void adoptConfiguredDevice();
     void reconnectionTimer();
+    void attemptReconnect();
+    int reconnectDelayMs() const;
+    void startDiscoveryFallback();
+    void stopDiscoveryFallback();
+    void setTrusted(const QString &address);
 
     Q_SLOT void onRefreshTimer();
     void findDevice();

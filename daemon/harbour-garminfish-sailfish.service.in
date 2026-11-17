@@ -2,6 +2,9 @@
 Description=GarminFish daemon
 After=pre-user-session.target
 After=lipstick.service
+# The daemon is the only thing that keeps notifications flowing: never give up
+# restarting it.
+StartLimitIntervalSec=0
 
 [Service]
 ExecStart=/usr/bin/harbour-garminfishd

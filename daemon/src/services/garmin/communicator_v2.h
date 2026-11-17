@@ -5,6 +5,7 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
 #include <QtCore/QHash>
+#include <QtCore/QDateTime>
 #include <QtCore/QPointer>
 #include <QtCore/QSharedPointer>
 #include <QtCore/QMutex>
@@ -167,6 +168,10 @@ public:
     bool isConnected() {return mConnected;};
     bool handshakeComplete() {return !isFirstConnect;};
 
+    // Tear down and rebuild the Garmin session. Used when BlueZ exposes the
+    // GATT services only after reporting the link as connected.
+    void restartSession();
+
 signals:
     void logDebug(const QString& msg);
     void logInfo(const QString& msg);
@@ -174,6 +179,10 @@ signals:
     void logError(const QString& msg);
     void mlrConnected();
     void pairingComplete();
+    // Emitted when the Garmin session is usable: handshake done, services
+    // registered and device settings exchanged. It fires again after every
+    // reconnection, which is what keeps the app state in sync.
+    void sessionReady();
     void stepsChanged(quint32 &steps);
     void heartRateChanged(quint8 &hr);
     void informationChanged(Amazfish::Info infoKey, const QString& infoValue);
@@ -253,7 +262,13 @@ private:
     bool mServicesResolved = false;
     bool mIsMlProtocol = false;
     bool mIsReliable = false;
-    QTimer* mBatteryTimer;
+    QTimer* mBatteryTimer = nullptr;
+
+    // Flood guard: if a peer ever acknowledges our acknowledgement, drop the
+    // repeated frames instead of saturating the link.
+    QByteArray m_lastAckPayload;
+    QDateTime m_ackBurstSince;
+    int m_ackBurst = 0;
     QQueue<QPair<QByteArray, QString>> mSendQueue;
     bool  mSendInProgress = false;
 };
